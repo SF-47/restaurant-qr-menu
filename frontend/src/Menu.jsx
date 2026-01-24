@@ -58,10 +58,14 @@ export default function Menu() {
           {filtered.map((item) => (
             <div key={item.id} className="itemCard">
               <div className="itemTop">
-                <p className="itemName">{item.name}</p>
-                {item.price ? (
+                <div className="itemNames">
+                  <p className="itemNameEn">{item.name?.en}</p>
+                  <p className="itemNameAr">{item.name?.ar}</p>
+                </div>
+
+                {item.price > 0 && (
                   <span className="itemPrice">{item.price}</span>
-                ) : null}
+                )}
               </div>
 
               {item.description ? (
