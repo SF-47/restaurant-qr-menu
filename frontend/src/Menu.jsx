@@ -3,6 +3,9 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 import "./Menu.css";
 import logoImg from "./assets/logo.jpg";
+import s1 from "./assets/images_for_slide/s1.jpeg";
+import s2 from "./assets/images_for_slide/s2.jpeg";
+import s3 from "./assets/images_for_slide/s3.jpeg";
 
 const WHATSAPP_NUMBER = "78771076";
 
@@ -18,9 +21,11 @@ export default function Menu() {
   const [items, setItems] = useState([]);
   const [category, setCategory] = useState("All"); // keep EN key for logic
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
       try {
         setError("");
         const snap = await getDocs(collection(db, "menuItems"));
@@ -28,9 +33,9 @@ export default function Menu() {
       } catch (e) {
         console.error("Firestore load failed:", e);
         setItems([]);
-        setError(
-          "Could not load menu items. If you use an adblocker, allow firestore.googleapis.com and reload.",
-        );
+        setError("Could not load menu items. Please reload.");
+      } finally {
+        setLoading(false);
       }
     }
     load();
@@ -61,6 +66,19 @@ export default function Menu() {
     return [{ en: "All", ar: "الكل" }, ...Array.from(map.values())];
   }, [availableItems]);
 
+  const sliderImages = [s3, s2, s1]; // or import images
+  const [slide, setSlide] = useState(0);
+
+  useEffect(() => {
+    if (sliderImages.length <= 1) return;
+
+    const id = setInterval(() => {
+      setSlide((s) => (s + 1) % sliderImages.length);
+    }, 3000); // change speed (ms)
+
+    return () => clearInterval(id);
+  }, []);
+
   // Filter by EN key from AVAILABLE items only
   const filtered =
     category === "All"
@@ -81,26 +99,35 @@ export default function Menu() {
 
         <h1 className="menuTitle">Shawarma Story</h1>
 
-        <div className="categoryRow">
-          {categories.map((c) => (
-            <button
-              key={c.en}
-              onClick={() => setCategory(c.en)}
-              className={`categoryBtn ${category === c.en ? "categoryBtnActive" : ""}`}
-              type="button"
-            >
-              <div className="categoryText">
-                <div className="categoryEn">{c.en}</div>
-                {c.ar ? <div className="categoryAr">{c.ar}</div> : null}
-              </div>
-            </button>
-          ))}
+        <div className="slider">
+          <img className="sliderImg" src={sliderImages[slide]} alt="promo" />
         </div>
       </div>
 
-      {error ? <div className="emptyState">{error}</div> : null}
+      <div className="categoryRow">
+        {categories.map((c) => (
+          <button
+            key={c.en}
+            onClick={() => setCategory(c.en)}
+            className={`categoryBtn ${category === c.en ? "categoryBtnActive" : ""}`}
+            type="button"
+          >
+            <div className="categoryText">
+              <div className="categoryEn">{c.en}</div>
+              {c.ar ? <div className="categoryAr">{c.ar}</div> : null}
+            </div>
+          </button>
+        ))}
+      </div>
 
-      {!error && filtered.length === 0 ? (
+      {loading ? (
+        <div className="emptyState">
+          <div className="spinner"></div>
+          Loading menu...
+        </div>
+      ) : error ? (
+        <div className="emptyState">{error}</div>
+      ) : filtered.length === 0 ? (
         <div className="emptyState">No items in this category.</div>
       ) : (
         <div className="itemsGrid">
@@ -128,13 +155,17 @@ export default function Menu() {
                     {nameAr ? <p className="itemNameAr">{nameAr}</p> : null}
                   </div>
 
-                  {price > 0 ? <span className="itemPrice">{price}</span> : null}
+                  {price > 0 ? (
+                    <span className="itemPrice">{price}</span>
+                  ) : null}
                 </div>
 
                 {descEn || descAr ? (
                   <p className="itemDesc">
                     {descEn}
-                    {descAr ? <span className="itemDescAr"> {descAr}</span> : null}
+                    {descAr ? (
+                      <span className="itemDescAr"> {descAr}</span>
+                    ) : null}
                   </p>
                 ) : null}
               </div>
