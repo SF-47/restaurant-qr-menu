@@ -4,7 +4,7 @@ import { db } from "./firebase";
 import "./Menu.css";
 import logoImg from "./assets/logo.jpg";
 
-const WHATSAPP_NUMBER = "81821171";
+const WHATSAPP_NUMBER = "78771076";
 
 export default function Menu() {
   const [items, setItems] = useState([]);
@@ -30,10 +30,10 @@ export default function Menu() {
     <div className="menuPage">
       <div className="menuHeader">
         <div className="logoContainer">
-          <img src={logoImg} alt="Story Shawarma" className="logoImg" />
+          <img src={logoImg} alt="Shawarma Story" className="logoImg" />
         </div>
 
-        <h1 className="menuTitle">Story Shawarma</h1>
+        <h1 className="menuTitle">Shawarma Story</h1>
 
         <div className="categoryRow">
           {categories.map((c) => (
