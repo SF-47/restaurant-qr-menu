@@ -6,8 +6,29 @@ import logoImg from "./assets/logo.jpg";
 import s1 from "./assets/images_for_slide/s1.jpeg";
 import s2 from "./assets/images_for_slide/s2.jpeg";
 import s3 from "./assets/images_for_slide/s3.jpeg";
+import s5 from "./assets/images_for_slide/s5.jpeg";
+import s6 from "./assets/images_for_slide/s6.jpeg";
+import s8 from "./assets/images_for_slide/s8.jpeg";
+
+
 
 const WHATSAPP_NUMBER = "78771076";
+
+const CATEGORY_ORDER = [
+  "Shawarma",
+  "Meals",
+  "Chicken",
+  "Sandwiches",
+  "Burgers",
+  "Doner",
+  "Zinger",
+  "Potato",
+  "Shawarma (Kilo)",
+  "Appetizers",
+  "Drinks",
+];
+
+const END_CATEGORIES = ["Appetizers", "Drinks"];
 
 // Helper: safely read bilingual text or fallback to string
 function getLangText(value, lang = "en") {
@@ -16,6 +37,15 @@ function getLangText(value, lang = "en") {
   if (typeof value === "object") return value?.[lang] ?? "";
   return "";
 }
+
+function toNum(v) {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") return Number(v) || 0;
+  return 0;
+}
+
+
+  
 
 export default function Menu() {
   const [items, setItems] = useState([]);
@@ -58,15 +88,29 @@ export default function Menu() {
         (typeof item.category === "string" ? item.category : "");
       const ar = getLangText(item.category, "ar");
 
-      if (en && !map.has(en)) {
-        map.set(en, { en, ar });
-      }
+      if (en && !map.has(en)) map.set(en, { en, ar });
     });
 
-    return [{ en: "All", ar: "الكل" }, ...Array.from(map.values())];
+    const list = Array.from(map.values());
+
+    list.sort((a, b) => {
+      const ai = CATEGORY_ORDER.indexOf(a.en);
+      const bi = CATEGORY_ORDER.indexOf(b.en);
+
+      // anything not listed goes to the end (alphabetical)
+      if (ai === -1 && bi === -1) return a.en.localeCompare(b.en);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+
+    return [{ en: "All", ar: "الكل" }, ...list];
   }, [availableItems]);
 
-  const sliderImages = [s3, s2, s1]; // or import images
+
+  
+  
+  const sliderImages = [s3, s2, s1 , s5 , s6, s8]; // or import images
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {
@@ -74,21 +118,41 @@ export default function Menu() {
 
     const id = setInterval(() => {
       setSlide((s) => (s + 1) % sliderImages.length);
-    }, 3000); // change speed (ms)
+    }, 1500); // change speed (ms)
 
     return () => clearInterval(id);
   }, []);
 
-  // Filter by EN key from AVAILABLE items only
   const filtered =
     category === "All"
-      ? availableItems
-      : availableItems.filter((i) => {
-          const en =
-            getLangText(i.category, "en") ||
-            (typeof i.category === "string" ? i.category : "");
-          return en === category;
-        });
+      ? availableItems.slice().sort((a, b) => {
+          const aCat =
+            getLangText(a.category, "en") ||
+            (typeof a.category === "string" ? a.category : "");
+          const bCat =
+            getLangText(b.category, "en") ||
+            (typeof b.category === "string" ? b.category : "");
+
+          const aIsEnd = END_CATEGORIES.includes(aCat);
+          const bIsEnd = END_CATEGORIES.includes(bCat);
+
+          // Appetizers & Drinks always last
+          if (aIsEnd && !bIsEnd) return 1;
+          if (!aIsEnd && bIsEnd) return -1;
+
+          // Same group → order DESC
+          return toNum(b.order) - toNum(a.order);
+        })
+      : availableItems
+          .filter((i) => {
+            const en =
+              getLangText(i.category, "en") ||
+              (typeof i.category === "string" ? i.category : "");
+            return en === category;
+          })
+          .slice()
+          .sort((a, b) => toNum(a.order) - toNum(b.order));
+  // ASC
 
   return (
     <div className="menuPage">
@@ -153,6 +217,7 @@ export default function Menu() {
                   <div className="itemNames">
                     <p className="itemNameEn">{nameEn}</p>
                     {nameAr ? <p className="itemNameAr">{nameAr}</p> : null}
+                    <p>{item.order}</p>
                   </div>
 
                   {price > 0 ? (

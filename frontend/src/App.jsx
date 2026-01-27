@@ -1,12 +1,17 @@
-import "./App.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Menu from "./Menu";
+import AdminMenu from "./AdminMenu";
+import "./App.css";
 
-function App() {
+const ADMIN_PATH = "/6975fc7b-e74c-8330-b6f1-8fe2f9b3d526";
+
+export default function App() {
   return (
-    <>
-      <Menu />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Menu />} />
+        <Route path={ADMIN_PATH} element={<AdminMenu />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;

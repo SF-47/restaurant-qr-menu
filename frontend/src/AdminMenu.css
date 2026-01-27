@@ -1,0 +1,351 @@
+:root {
+  --bg: #ffffff;
+  --primary-green: #1d9448;
+  --dark-green: #0d6b2f;
+  --vibrant-orange: #ff8c2a;
+  --text: #1a1a1a;
+  --muted: #7d6c6c;
+  --border: rgba(0, 0, 0, 0.15);
+  --shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+.adminPage {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  padding: 16px;
+}
+
+.adminTopbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.adminTitle h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.adminTitle p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.adminActions {
+  display: flex;
+  gap: 8px;
+}
+
+.adminFilters {
+  display: grid;
+  grid-template-columns: 1fr 220px auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 860px) {
+  .adminFilters {
+    grid-template-columns: 1fr;
+  }
+}
+
+.adminGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 860px) {
+  .adminGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.adminCard {
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 12px;
+  box-shadow: 0 6px 16px rgba(29, 148, 72, 0.06);
+}
+
+.adminCardDisabled {
+  opacity: 0.6;
+}
+
+.adminCardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.adminCardBtns {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.adminNameEn {
+  font-weight: 900;
+  font-size: 15px;
+}
+
+.adminNameAr {
+  font-weight: 900;
+  font-size: 14px;
+  direction: rtl;
+  text-align: right;
+}
+
+.adminMeta {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(29, 148, 72, 0.06);
+}
+
+.pillOk {
+  background: rgba(29, 148, 72, 0.12);
+}
+
+.pillBad {
+  background: rgba(255, 140, 42, 0.15);
+  border-color: rgba(255, 140, 42, 0.25);
+}
+
+.adminDesc {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.adminDescAr {
+  direction: rtl;
+  text-align: right;
+  margin-top: 4px;
+}
+
+.adminEmpty {
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Inputs */
+.ainput, .aselect, .atextarea {
+  width: 100%;
+  background-color: #84837a;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+
+.ainput:focus, .aselect:focus, .atextarea:focus {
+  border-color: rgba(29, 148, 72, 0.55);
+}
+
+.atextarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.acheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Buttons */
+.abtn, .abtnSmall {
+  border: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+}
+
+.abtn {
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.abtnSmall {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.abtnGhost {
+  background: transparent;
+  color: var(--primary-green);
+  border: 1px solid rgba(29, 148, 72, 0.35);
+}
+
+.abtnDanger {
+  background: linear-gradient(135deg, #c0392b, #922b21);
+  color: #fff;
+  border: 0;
+}
+
+/* Modal */
+.amodalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.amodal {
+  width: min(720px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.amodalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.amodalTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 1000;
+}
+
+.amodalClose {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 6px 10px;
+}
+
+.amodalBody {
+  padding: 14px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 800;
+}
+
+.field.inline {
+  grid-column: 1 / -1;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 12px;
+}
+ 
+/* Combobox */
+.combo {
+  position: relative;
+}
+
+.comboTop {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.comboList {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  z-index: 5;
+}
+
+.comboItem {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: #fff;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.comboItem:hover {
+  background: rgba(29, 148, 72, 0.06);
+}
+
+.comboEn {
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.comboAr {
+  font-size: 12px;
+  color: var(--muted);
+  direction: rtl;
+  text-align: right;
+}
+
+.comboFooter {
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  background: rgba(0,0,0,0.02);
+}
