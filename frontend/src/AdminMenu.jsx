@@ -18,6 +18,7 @@ import {
 } from "firebase/auth";
 
 const CATEGORY_ORDER = [
+  "Offers",
   "Shawarma",
   "Meals",
   "Chicken",
@@ -30,6 +31,15 @@ const CATEGORY_ORDER = [
   "Appetizers",
   "Drinks",
 ];
+
+
+function catKey(v) {
+  return (v || "").toString().trim().toLowerCase();
+}
+
+const CATEGORY_INDEX = new Map(
+  CATEGORY_ORDER.map((name, idx) => [catKey(name), idx]),
+);
 
 function getLangText(value, lang = "en") {
   if (!value) return "";
@@ -61,38 +71,31 @@ function normalizeTextObj(v) {
 
 function makeCategoriesFromItems(items) {
   const map = new Map();
+
+  // collect categories from items (use normalized key to avoid "Offers" vs "offers")
   items.forEach((s) => {
     const c = normalizeCategory(s.category);
-    if (c.en && !map.has(c.en)) map.set(c.en, { en: c.en, ar: c.ar });
+    const key = catKey(c.en);
+    if (!key) return;
+
+    // keep first seen display values
+    if (!map.has(key)) map.set(key, { en: c.en.trim(), ar: c.ar.trim() });
   });
 
   const list = Array.from(map.values());
+
+  // sort by CATEGORY_INDEX (preferred order), then alphabetically
   list.sort((a, b) => {
-    const ai = CATEGORY_ORDER.indexOf(a.en);
-    const bi = CATEGORY_ORDER.indexOf(b.en);
-    if (ai === -1 && bi === -1) return a.en.localeCompare(b.en);
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
+    const ai = CATEGORY_INDEX.get(catKey(a.en)) ?? 999999;
+    const bi = CATEGORY_INDEX.get(catKey(b.en)) ?? 999999;
+
+    if (ai !== bi) return ai - bi;
+    return a.en.localeCompare(b.en);
   });
 
-  // include any CATEGORY_ORDER that doesn't exist yet (optional)
-  CATEGORY_ORDER.forEach((en) => {
-    if (!map.has(en)) list.push({ en, ar: "" });
-  });
-
-  // de-dup after pushing
-  const dedup = [];
-  const seen = new Set();
-  for (const c of list) {
-    if (!c.en) continue;
-    if (seen.has(c.en)) continue;
-    seen.add(c.en);
-    dedup.push(c);
-  }
-
-  return dedup;
+  return list;
 }
+
 
 function computeNextOrder(items, categoryEn) {
   const sameCat = items.filter(
@@ -127,32 +130,12 @@ function Modal({ open, title, children, onClose }) {
 }
 
 /** Combobox-ish: searchable dropdown + pick existing + quick add */
-function CategoryCombo({ categories, value, onChange, onPickObj }) {
+function CategoryCombo({ categories, value, onPickObj }) {
   const [open, setOpen] = useState(false);
-  const [q, setQ] = useState("");
-
-  const filtered = useMemo(() => {
-    const query = (q || "").toLowerCase().trim();
-    if (!query) return categories;
-    return categories.filter(
-      (c) => c.en.toLowerCase().includes(query) || (c.ar || "").includes(q),
-    );
-  }, [q, categories]);
 
   function pick(c) {
-    onChange(c.en);
     onPickObj?.(c);
     setOpen(false);
-    setQ(""); // optional: clear typing buffer
-  }
-
-  function commitNew() {
-    const en = (q || "").trim();
-    if (!en) return;
-    onChange(en);
-    onPickObj?.({ en, ar: "" });
-    setOpen(false);
-    setQ("");
   }
 
   return (
@@ -160,28 +143,15 @@ function CategoryCombo({ categories, value, onChange, onPickObj }) {
       <div className="comboTop">
         <input
           className="ainput"
-          value={open ? q : value?.en || ""}
-          onFocus={() => {
-            setOpen(true);
-            setQ(value?.en || "");
-          }}
-          onChange={(e) => {
-            setOpen(true);
-            setQ(e.target.value);
-          }}
-          placeholder="Category (type to search or add)"
+          value={value?.en || ""}
+          readOnly
+          placeholder="Pick category"
+          onClick={() => setOpen((v) => !v)}
         />
-
         <button
           className="abtn abtnGhost"
           type="button"
-          onClick={() => {
-            setOpen((v) => {
-              const nextOpen = !v;
-              if (nextOpen) setQ(value?.en || "");
-              return nextOpen;
-            });
-          }}
+          onClick={() => setOpen((v) => !v)}
         >
           ▾
         </button>
@@ -189,7 +159,7 @@ function CategoryCombo({ categories, value, onChange, onPickObj }) {
 
       {open ? (
         <div className="comboList">
-          {filtered.slice(0, 12).map((c) => (
+          {categories.map((c) => (
             <button
               key={c.en}
               className="comboItem"
@@ -200,22 +170,6 @@ function CategoryCombo({ categories, value, onChange, onPickObj }) {
               {c.ar ? <div className="comboAr">{c.ar}</div> : null}
             </button>
           ))}
-
-          <div className="comboFooter">
-            <button className="abtn" type="button" onClick={commitNew}>
-              Use “{(q || "").trim() || "..."}”
-            </button>
-            <button
-              className="abtn abtnGhost"
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                setQ("");
-              }}
-            >
-              Close
-            </button>
-          </div>
         </div>
       ) : null}
     </div>
@@ -419,23 +373,27 @@ export default function AdminMenu() {
       })
       .slice()
       .sort((a, b) => {
-        const aCat = normalizeCategory(a.category).en;
-        const bCat = normalizeCategory(b.category).en;
+        const aCatRaw = normalizeCategory(a.category).en;
+        const bCatRaw = normalizeCategory(b.category).en;
 
-        const ai = CATEGORY_ORDER.indexOf(aCat);
-        const bi = CATEGORY_ORDER.indexOf(bCat);
+        const aKey = catKey(aCatRaw);
+        const bKey = catKey(bCatRaw);
 
-        if (ai === -1 && bi === -1) {
-          // same: by order asc
-          if (aCat === bCat) return toNum(a.order) - toNum(b.order);
-          return aCat.localeCompare(bCat);
-        }
-        if (ai === -1) return 1;
-        if (bi === -1) return -1;
+        const ai = CATEGORY_INDEX.has(aKey) ? CATEGORY_INDEX.get(aKey) : 999999;
+        const bi = CATEGORY_INDEX.has(bKey) ? CATEGORY_INDEX.get(bKey) : 999999;
+
+        // category priority first
         if (ai !== bi) return ai - bi;
 
-        // same category -> order asc
-        return toNum(a.order) - toNum(b.order);
+        // same category -> item order
+        const ao = toNum(a.order, 999999);
+        const bo = toNum(b.order, 999999);
+        if (ao !== bo) return ao - bo;
+
+        // final tie-breaker: name
+        return getLangText(a.name, "en").localeCompare(
+          getLangText(b.name, "en"),
+        );
       });
   }, [items, q, catFilter, showUnavailable]);
 
@@ -585,8 +543,6 @@ export default function AdminMenu() {
         </div>
 
         <div className="adminFilters">
-          
-
           <select
             className="aselect"
             value={catFilter}
@@ -695,6 +651,7 @@ export default function AdminMenu() {
           onClose={closeModal}
         >
           <div className="formGrid">
+            
             <div className="field">
               <label>Name (EN) *</label>
               <input
