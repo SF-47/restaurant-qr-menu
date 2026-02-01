@@ -32,7 +32,6 @@ const CATEGORY_ORDER = [
   "Drinks",
 ];
 
-
 function catKey(v) {
   return (v || "").toString().trim().toLowerCase();
 }
@@ -96,15 +95,19 @@ function makeCategoriesFromItems(items) {
   return list;
 }
 
+function computeNextOrderFillGaps(items) {
+  const used = new Set();
 
-function computeNextOrder(items, categoryEn) {
-  const sameCat = items.filter(
-    (it) => normalizeCategory(it.category).en === categoryEn,
-  );
-  if (sameCat.length === 0) return 1;
-  const maxOrder = Math.max(...sameCat.map((it) => toNum(it.order, 0)));
-  return maxOrder + 1;
+  for (const it of items || []) {
+    const n = toNum(it.order, 0);
+    if (Number.isInteger(n) && n > 0) used.add(n);
+  }
+
+  let candidate = 1;
+  while (used.has(candidate)) candidate++;
+  return candidate;
 }
+
 
 /** Simple modal */
 function Modal({ open, title, children, onClose }) {
@@ -130,12 +133,46 @@ function Modal({ open, title, children, onClose }) {
 }
 
 /** Combobox-ish: searchable dropdown + pick existing + quick add */
-function CategoryCombo({ categories, value, onPickObj }) {
+/** Combobox: searchable dropdown + allow typing new category */
+function CategoryCombo({ categories, value, onTypeEn, onPickObj }) {
   const [open, setOpen] = useState(false);
+
+  const text = value?.en || "";
+
+  const filtered = useMemo(() => {
+    const q = (text || "").toLowerCase().trim();
+    if (!q) return categories;
+    return categories.filter((c) => (c.en || "").toLowerCase().includes(q));
+  }, [categories, text]);
 
   function pick(c) {
     onPickObj?.(c);
     setOpen(false);
+  }
+
+  function commitTyped() {
+    const en = (text || "").trim();
+    if (!en) return;
+
+    const existing = categories.find((c) => catKey(c.en) === catKey(en));
+    if (existing) {
+      pick(existing);
+      return;
+    }
+
+    // new category (AR empty for now)
+    onPickObj?.({ en, ar: "" });
+    setOpen(false);
+  }
+
+  function onKeyDown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitTyped();
+    }
+    if (e.key === "Escape") {
+      setOpen(false);
+    }
   }
 
   return (
@@ -143,15 +180,21 @@ function CategoryCombo({ categories, value, onPickObj }) {
       <div className="comboTop">
         <input
           className="ainput"
-          value={value?.en || ""}
-          readOnly
-          placeholder="Pick category"
-          onClick={() => setOpen((v) => !v)}
+          value={text}
+          placeholder="Pick or type category"
+          onChange={(e) => {
+            onTypeEn?.(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKeyDown}
         />
+
         <button
           className="abtn abtnGhost"
           type="button"
           onClick={() => setOpen((v) => !v)}
+          aria-label="Toggle categories"
         >
           ▾
         </button>
@@ -159,7 +202,18 @@ function CategoryCombo({ categories, value, onPickObj }) {
 
       {open ? (
         <div className="comboList">
-          {categories.map((c) => (
+          {text.trim() ? (
+            <button
+              className="comboItem comboCreate"
+              type="button"
+              onClick={commitTyped}
+            >
+              <div className="comboEn">Use: {text.trim()}</div>
+              <div className="comboAr">(new category)</div>
+            </button>
+          ) : null}
+
+          {filtered.map((c) => (
             <button
               key={c.en}
               className="comboItem"
@@ -399,16 +453,18 @@ export default function AdminMenu() {
 
   function openAdd() {
     const defaultCat = categories[0]?.en || "";
-    const next = computeNextOrder(items, defaultCat);
+    const next = computeNextOrderFillGaps(items);
+
     setDraft({
       ...emptyDraft,
       category: {
         en: defaultCat,
         ar: categories.find((c) => c.en === defaultCat)?.ar || "",
       },
-      order: next,
+      order: next, // ✅ global order
       available: true,
     });
+
     setModal({ open: true, mode: "add" });
   }
 
@@ -447,17 +503,6 @@ export default function AdminMenu() {
       return copy;
     });
   }
-
-  // auto-suggest order when category changes (only for add mode)
-  useEffect(() => {
-    if (!modal.open) return;
-    if (modal.mode !== "add") return;
-    const en = (draft.category?.en || "").trim();
-    if (!en) return;
-    const next = computeNextOrder(items, en);
-    setDraft((d) => ({ ...d, order: next }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft.category?.en]);
 
   async function save() {
     const payload = {
@@ -651,7 +696,6 @@ export default function AdminMenu() {
           onClose={closeModal}
         >
           <div className="formGrid">
-            
             <div className="field">
               <label>Name (EN) *</label>
               <input
@@ -695,12 +739,17 @@ export default function AdminMenu() {
               <CategoryCombo
                 categories={categories}
                 value={draft.category}
-                onChange={(en) => setField("category.en", en)}
+                onTypeEn={(v) => {
+                  setField("category.en", v);
+                  // optional: clear Arabic while typing a new category
+                  // setField("category.ar", "");
+                }}
                 onPickObj={(obj) => {
                   setField("category.en", obj.en);
                   setField("category.ar", obj.ar || "");
                 }}
               />
+
               <div className="hint">
                 Tip: type a new category name then click “Use …”.
               </div>

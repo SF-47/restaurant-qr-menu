@@ -5,7 +5,7 @@ import "./Menu.css";
 import logoImg from "./assets/logo.jpg";
 import s1 from "./assets/images_for_slide/s1.jpeg";
 import s2 from "./assets/images_for_slide/s2.jpeg";
-import s3 from "./assets/images_for_slide/s3.jpeg";
+// import s3 from "./assets/images_for_slide/s3.jpeg";
 import s5 from "./assets/images_for_slide/s5.jpeg";
 //import s6 from "./assets/images_for_slide/s6.jpeg";
 import s8 from "./assets/images_for_slide/s8.jpeg";
@@ -134,7 +134,7 @@ export default function Menu() {
 
   
   
-  const sliderImages = [s3, s2, s1 , s5 , s8]; // or import images
+  const sliderImages = [ s2, s1 , s5 , s8]; // or import images
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {
