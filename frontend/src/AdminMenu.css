@@ -37,8 +37,11 @@
 }
 
 .adminActions {
-  display: flex;
+  padding: 15px;
+  display: contents;
+  background-color: white;
   gap: 8px;
+  justify-self: stretch;
 }
 
 .adminFilters {
@@ -151,8 +154,9 @@
 /* Inputs */
 .ainput, .aselect, .atextarea {
   width: 100%;
-  background-color: #84837a;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #cecece;
+  color: black;
+  border: 2px solid rgb(57, 138, 3);
   border-radius: 12px;
   padding: 10px 12px;
   font-size: 14px;
@@ -189,7 +193,8 @@
 
 .abtn {
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .abtnSmall {
@@ -231,11 +236,16 @@
 
 .amodalHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
+  justify-content: space-between;
   border-bottom: 1px solid rgba(0,0,0,0.08);
 }
+
+.amodalHeader > *:last-child {
+  margin-left: auto;
+}
+
 
 .amodalTitle {
   margin: 0;
@@ -278,6 +288,69 @@
 
 .field.inline {
   grid-column: 1 / -1;
+}
+
+/* Mobile specific tweaks (keep responsive behavior requested earlier) */
+@media (max-width: 720px) {
+  .adminTopbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  
+  .adminFilters {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .adminGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: calc(100vh - 120px);
+  }
+
+  .amodal {
+    width: calc(100% - 24px);
+    height: calc(100% - 40px);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .amodalBody {
+    padding: 10px;
+    overflow: auto;
+    flex: 1 1 auto;
+  }
+
+  .modalFooter {
+    padding: 12px;
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0), #fff);
+  }
+
+  .adminCard {
+    padding: 10px;
+  }
+
+  .comboList {
+    /* Use absolute positioning inside the modal/container on mobile so
+       the dropdown aligns with the input and stays visible when the
+       virtual keyboard appears. Fixed positioning caused it to be
+       placed offscreen on some phones. */
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    max-height: 45vh;
+  }
 }
 
 .hint {
@@ -362,4 +435,12 @@
 .comboCreate {
   border-bottom: 1px solid #e6e6e6;
   font-weight: 600;
+}
+
+.bgLogout {
+  background-color: #ffffff;
+}
+
+.logoutBtn {
+  margin: 10px;
 }

@@ -108,15 +108,20 @@ function computeNextOrderFillGaps(items) {
   return candidate;
 }
 
-
 /** Simple modal */
-function Modal({ open, title, children, onClose }) {
+function Modal({ open, title, children, onClose, headerExtra, headerRight }) {
   if (!open) return null;
   return (
     <div className="amodalOverlay" role="dialog" aria-modal="true">
       <div className="amodal">
         <div className="amodalHeader">
-          <h3 className="amodalTitle">{title}</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <h3 className="amodalTitle">{title}</h3>
+            {headerExtra}
+          </div>
+          {headerRight && (
+            <div style={{ marginLeft: "auto" }}>{headerRight}</div>
+          )}
           <button
             className="amodalClose"
             onClick={onClose}
@@ -136,18 +141,22 @@ function Modal({ open, title, children, onClose }) {
 /** Combobox: searchable dropdown + allow typing new category */
 function CategoryCombo({ categories, value, onTypeEn, onPickObj }) {
   const [open, setOpen] = useState(false);
+  const [forceAll, setForceAll] = useState(false);
 
   const text = value?.en || "";
 
   const filtered = useMemo(() => {
+    // if toggle was used to open, show full list regardless of typed text
+    if (forceAll) return categories;
     const q = (text || "").toLowerCase().trim();
     if (!q) return categories;
     return categories.filter((c) => (c.en || "").toLowerCase().includes(q));
-  }, [categories, text]);
+  }, [categories, text, forceAll]);
 
   function pick(c) {
     onPickObj?.(c);
     setOpen(false);
+    setForceAll(false);
   }
 
   function commitTyped() {
@@ -163,6 +172,7 @@ function CategoryCombo({ categories, value, onTypeEn, onPickObj }) {
     // new category (AR empty for now)
     onPickObj?.({ en, ar: "" });
     setOpen(false);
+    setForceAll(false);
   }
 
   function onKeyDown(e) {
@@ -185,15 +195,25 @@ function CategoryCombo({ categories, value, onTypeEn, onPickObj }) {
           onChange={(e) => {
             onTypeEn?.(e.target.value);
             setOpen(true);
+            setForceAll(false); // typing should filter normally
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true);
+            setForceAll(false);
+          }}
           onKeyDown={onKeyDown}
         />
 
         <button
           className="abtn abtnGhost"
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() =>
+            setOpen((prev) => {
+              const newOpen = !prev;
+              if (newOpen) setForceAll(true); // when opening via toggle, show full list
+              return newOpen;
+            })
+          }
           aria-label="Toggle categories"
         >
           ▾
@@ -233,7 +253,6 @@ function CategoryCombo({ categories, value, onTypeEn, onPickObj }) {
 const emptyDraft = {
   id: null,
   name: { en: "", ar: "" },
-  description: { en: "", ar: "" },
   category: { en: "", ar: "" },
   price: 0,
   order: 1,
@@ -339,19 +358,14 @@ function LoginGate({ children }) {
   // Logged in -> show logout + admin UI
   return (
     <>
-      <div className="adminTopbar" style={{ marginBottom: 10 }}>
-        <div className="adminTitle">
-          <h1>Menu Admin</h1>
-          <p>Logged in</p>
-        </div>
-
-        <div className="adminActions">
-          <button className="abtn abtnGhost" type="button" onClick={logout}>
-            Logout
-          </button>
-        </div>
+    <div className="bgLogout">
+      <div className="logoutBtn">
+        <button className="abtn abtnGhost" type="button" onClick={logout}>
+          Logout
+        </button>
       </div>
-
+    </div>
+      
       {children}
     </>
   );
@@ -374,6 +388,12 @@ export default function AdminMenu() {
   const [q, setQ] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [showUnavailable, setShowUnavailable] = useState(true);
+  const [showOnlyUnavailable, setShowOnlyUnavailable] = useState(false);
+  // category management modal state
+  const [manageCatsOpen, setManageCatsOpen] = useState(false);
+  const [editingCat, setEditingCat] = useState(null); // {en, ar}
+  const [catEditEn, setCatEditEn] = useState("");
+  const [catEditAr, setCatEditAr] = useState("");
 
   // modal controls
   const [modal, setModal] = useState({ open: false, mode: "add" }); // add | edit | delete
@@ -406,7 +426,10 @@ export default function AdminMenu() {
     const query = (q || "").toLowerCase().trim();
 
     return items
-      .filter((it) => (showUnavailable ? true : it.available !== false))
+      .filter((it) => {
+        if (showOnlyUnavailable) return it.available === false;
+        return showUnavailable ? true : it.available !== false;
+      })
       .filter((it) => {
         const catEn = normalizeCategory(it.category).en;
         if (catFilter === "All") return true;
@@ -416,11 +439,9 @@ export default function AdminMenu() {
         if (!query) return true;
         const nEn = getLangText(it.name, "en").toLowerCase();
         const nAr = getLangText(it.name, "ar");
-        const dEn = getLangText(it.description, "en").toLowerCase();
         const catEn = normalizeCategory(it.category).en.toLowerCase();
         return (
           nEn.includes(query) ||
-          dEn.includes(query) ||
           catEn.includes(query) ||
           (nAr || "").includes(q)
         );
@@ -449,7 +470,7 @@ export default function AdminMenu() {
           getLangText(b.name, "en"),
         );
       });
-  }, [items, q, catFilter, showUnavailable]);
+  }, [items, q, catFilter, showUnavailable, showOnlyUnavailable]);
 
   function openAdd() {
     const defaultCat = categories[0]?.en || "";
@@ -468,12 +489,66 @@ export default function AdminMenu() {
     setModal({ open: true, mode: "add" });
   }
 
+  async function renameCategory(oldEn, newObj) {
+    if (!oldEn || !newObj) return;
+    try {
+      setLoading(true);
+      const keyOld = catKey(oldEn);
+      const updates = items
+        .filter((it) => catKey(normalizeCategory(it.category).en) === keyOld)
+        .map((it) =>
+          updateDoc(doc(db, "menuItems", it.id), {
+            category: { en: newObj.en, ar: newObj.ar || "" },
+            updatedAt: serverTimestamp(),
+          }),
+        );
+
+      // run sequentially to avoid overwhelming Firestore
+      for (const p of updates) await p;
+      await load();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to rename category. Check console.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteCategoryByName(enName) {
+    if (!enName) return;
+    if (
+      !confirm(
+        `Delete category "${enName}" from all items? This will clear the category on matching items.`,
+      )
+    )
+      return;
+    try {
+      setLoading(true);
+      const keyOld = catKey(enName);
+      const updates = items
+        .filter((it) => catKey(normalizeCategory(it.category).en) === keyOld)
+        .map((it) =>
+          updateDoc(doc(db, "menuItems", it.id), {
+            category: { en: "", ar: "" },
+            updatedAt: serverTimestamp(),
+          }),
+        );
+
+      for (const p of updates) await p;
+      await load();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete category. Check console.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function openEdit(item) {
     const cat = normalizeCategory(item.category);
     setDraft({
       id: item.id,
       name: normalizeTextObj(item.name),
-      description: normalizeTextObj(item.description),
       category: cat,
       price: toNum(item.price, 0),
       order: toNum(item.order, 1),
@@ -483,7 +558,8 @@ export default function AdminMenu() {
   }
 
   function openDelete(item) {
-    setDraft({ ...draft, id: item.id, name: normalizeTextObj(item.name) });
+    // set a minimal, explicit draft for deletion to avoid relying on stale state
+    setDraft({ id: item.id, name: normalizeTextObj(item.name) });
     setModal({ open: true, mode: "delete" });
   }
 
@@ -498,7 +574,11 @@ export default function AdminMenu() {
       const copy = structuredClone(d);
       const parts = path.split(".");
       let cur = copy;
-      for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
+      for (let i = 0; i < parts.length - 1; i++) {
+        // create intermediate objects if missing to avoid accessing undefined
+        if (cur[parts[i]] == null) cur[parts[i]] = {};
+        cur = cur[parts[i]];
+      }
       cur[parts[parts.length - 1]] = value;
       return copy;
     });
@@ -510,13 +590,9 @@ export default function AdminMenu() {
         en: (draft.name.en || "").trim(),
         ar: (draft.name.ar || "").trim(),
       },
-      description: {
-        en: (draft.description.en || "").trim(),
-        ar: (draft.description.ar || "").trim(),
-      },
       category: {
-        en: (draft.category.en || "").trim(),
-        ar: (draft.category.ar || "").trim(),
+        en: (draft.category?.en || "").trim(),
+        ar: (draft.category?.ar || "").trim(),
       },
       price: toNum(draft.price, 0),
       order: toNum(draft.order, 1),
@@ -552,14 +628,24 @@ export default function AdminMenu() {
   }
 
   async function remove() {
-    if (!draft.id) return;
+    const id = draft?.id;
+    if (!id) {
+      alert("No item selected to delete.");
+      return;
+    }
+
     try {
-      await deleteDoc(doc(db, "menuItems", draft.id));
+      setLoading(true);
+      // ensure id is a string
+      await deleteDoc(doc(db, "menuItems", String(id)));
       await load();
       closeModal();
     } catch (e) {
       console.error(e);
-      alert("Delete failed. Check console.");
+      // surface a helpful message (include error message if available)
+      alert("Delete failed. Check console. " + (e?.message || ""));
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -569,7 +655,6 @@ export default function AdminMenu() {
         <div className="adminTopbar">
           <div className="adminTitle">
             <h1>Menu Admin</h1>
-            <p>CRUD panel for Firestore “menuItems”.</p>
           </div>
 
           <div className="adminActions">
@@ -585,6 +670,14 @@ export default function AdminMenu() {
               Refresh
             </button>
           </div>
+          <button
+            className="abtn abtnGhost"
+            type="button"
+            onClick={() => setManageCatsOpen(true)}
+            aria-label="Manage Categories"
+          >
+            Manage categories
+          </button>
         </div>
 
         <div className="adminFilters">
@@ -609,7 +702,139 @@ export default function AdminMenu() {
             />
             Show unavailable
           </label>
+          <label className="acheck">
+            <input
+              type="checkbox"
+              checked={showOnlyUnavailable}
+              onChange={(e) => setShowOnlyUnavailable(e.target.checked)}
+            />
+            Show only unavailable
+          </label>
         </div>
+
+        {/* Manage Categories Modal */}
+        <Modal
+          open={manageCatsOpen}
+          title={`Manage Categories (${categories.length})`}
+          onClose={() => {
+            setManageCatsOpen(false);
+            setEditingCat(null);
+          }}
+          headerRight={
+            !editingCat && (
+              <button
+                className="abtn abtnGhost"
+                onClick={() => {
+                  setManageCatsOpen(false);
+                  setEditingCat(null);
+                }}
+              >
+                Cancel
+              </button>
+            )
+          }
+        >
+          <div style={{ display: "grid", gap: 10 }}>
+            {editingCat ? (
+              <div>
+                <div className="field">
+                  <label>Edit category (EN)</label>
+                  <input
+                    className="ainput"
+                    value={catEditEn}
+                    onChange={(e) => setCatEditEn(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label>Edit category (AR)</label>
+                  <input
+                    className="ainput"
+                    value={catEditAr}
+                    onChange={(e) => setCatEditAr(e.target.value)}
+                    dir="rtl"
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    className="abtn abtnGhost"
+                    onClick={() => setEditingCat(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="abtn"
+                    onClick={async () => {
+                      await renameCategory(editingCat.en, {
+                        en: catEditEn,
+                        ar: catEditAr,
+                      });
+                      setEditingCat(null);
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  {categories.map((c) => (
+                    <div
+                      key={c.en}
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 800 }}>{c.en}</div>
+                        {c.ar ? (
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "var(--muted)",
+                              direction: "rtl",
+                              textAlign: "right",
+                            }}
+                          >
+                            {c.ar}
+                          </div>
+                        ) : null}
+                      </div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button
+                          className="abtn abtnGhost"
+                          onClick={() => {
+                            setEditingCat(c);
+                            setCatEditEn(c.en);
+                            setCatEditAr(c.ar || "");
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="abtn abtnDanger"
+                          onClick={() => deleteCategoryByName(c.en)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
 
         {loading ? (
           <div className="adminEmpty">Loading…</div>
@@ -672,17 +897,7 @@ export default function AdminMenu() {
                     </div>
                   </div>
 
-                  {getLangText(it.description, "en") ||
-                  getLangText(it.description, "ar") ? (
-                    <div className="adminDesc">
-                      <div>{getLangText(it.description, "en")}</div>
-                      {getLangText(it.description, "ar") ? (
-                        <div className="adminDescAr">
-                          {getLangText(it.description, "ar")}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
+                  {/* descriptions removed from admin panel */}
                 </div>
               );
             })}
@@ -697,7 +912,7 @@ export default function AdminMenu() {
         >
           <div className="formGrid">
             <div className="field">
-              <label>Name (EN) *</label>
+              <label>Name (EN)</label>
               <input
                 className="ainput"
                 value={draft.name.en}
@@ -715,30 +930,13 @@ export default function AdminMenu() {
               />
             </div>
 
-            <div className="field">
-              <label>Description (EN)</label>
-              <textarea
-                className="atextarea"
-                value={draft.description.en}
-                onChange={(e) => setField("description.en", e.target.value)}
-              />
-            </div>
+            {/* Descriptions removed by request */}
 
             <div className="field">
-              <label>Description (AR)</label>
-              <textarea
-                className="atextarea"
-                value={draft.description.ar}
-                onChange={(e) => setField("description.ar", e.target.value)}
-                dir="rtl"
-              />
-            </div>
-
-            <div className="field">
-              <label>Category (combobox) *</label>
+              <label>Category</label>
               <CategoryCombo
                 categories={categories}
-                value={draft.category}
+                value={draft.category || { en: "", ar: "" }}
                 onTypeEn={(v) => {
                   setField("category.en", v);
                   // optional: clear Arabic while typing a new category
@@ -749,17 +947,13 @@ export default function AdminMenu() {
                   setField("category.ar", obj.ar || "");
                 }}
               />
-
-              <div className="hint">
-                Tip: type a new category name then click “Use …”.
-              </div>
             </div>
 
             <div className="field">
               <label>Category (AR)</label>
               <input
                 className="ainput"
-                value={draft.category.ar}
+                value={draft.category?.ar || ""}
                 onChange={(e) => setField("category.ar", e.target.value)}
                 dir="rtl"
               />
@@ -786,7 +980,11 @@ export default function AdminMenu() {
                 inputMode="numeric"
                 value={draft.order}
                 onChange={(e) =>
-                  setDraft((d) => ({ ...d, order: toNum(e.target.value, 1) }))
+                  // allow the field to be cleared while typing; convert to number only on save
+                  setDraft((d) => ({
+                    ...d,
+                    order: e.target.value === "" ? "" : e.target.value,
+                  }))
                 }
               />
             </div>
@@ -837,8 +1035,13 @@ export default function AdminMenu() {
             >
               Cancel
             </button>
-            <button className="abtn abtnDanger" type="button" onClick={remove}>
-              Delete
+            <button
+              className="abtn abtnDanger"
+              type="button"
+              onClick={remove}
+              disabled={loading}
+            >
+              {loading ? "Deleting…" : "Delete"}
             </button>
           </div>
         </Modal>
