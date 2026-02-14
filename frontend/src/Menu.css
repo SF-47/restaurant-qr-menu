@@ -56,6 +56,41 @@
   animation: logoFloat 3s ease-in-out infinite;
 }
 
+.logoImgLoc {
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(0 4px 12px rgba(29, 148, 72, 0.2));
+  
+}
+
+.logoImgInsta {
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(0 4px 12px rgba(29, 148, 72, 0.2));
+  
+}
+
+.locins {
+  font-size: 10px;
+  margin: px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  filter: drop-shadow(0 4px 12px rgba(29, 148, 72, 0.2));
+  margin: 20px;
+
+}
+
+.div321 {
+  display: flex;
+  justify-content: center;
+  
+  
+  
+}
+
 @keyframes logoFloat {
   0%,
   100% {

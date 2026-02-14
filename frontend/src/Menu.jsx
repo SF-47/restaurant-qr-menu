@@ -3,14 +3,16 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 import "./Menu.css";
 import logoImg from "./assets/logo.jpg";
+// import instagramImg from "./assets/instagram.png";
+// import locationImg from "./assets/location.png";
+// import dot from "./assets/dot.png";
+
 import s1 from "./assets/images_for_slide/s1.jpeg";
 import s2 from "./assets/images_for_slide/s2.jpeg";
 // import s3 from "./assets/images_for_slide/s3.jpeg";
 import s5 from "./assets/images_for_slide/s5.jpeg";
 //import s6 from "./assets/images_for_slide/s6.jpeg";
 import s8 from "./assets/images_for_slide/s8.jpeg";
-
-
 
 const WHATSAPP_NUMBER = "78771076";
 
@@ -29,14 +31,12 @@ const CATEGORY_ORDER = [
   "Drinks",
 ];
 
-
-
 function catKey(v) {
   return (v || "").toString().trim().toLowerCase();
 }
 
 const CATEGORY_INDEX = new Map(
-  CATEGORY_ORDER.map((name, idx) => [catKey(name), idx])
+  CATEGORY_ORDER.map((name, idx) => [catKey(name), idx]),
 );
 
 function categoryRank(catEn) {
@@ -51,7 +51,6 @@ function categoryRank(catEn) {
   // new categories from firebase (not in list) go after known ones
   return 500_000;
 }
-
 
 const END_CATEGORIES = ["Appetizers", "Drinks"];
 
@@ -68,9 +67,6 @@ function toNum(v) {
   if (typeof v === "string") return Number(v) || 0;
   return 0;
 }
-
-
-  
 
 export default function Menu() {
   const [items, setItems] = useState([]);
@@ -104,37 +100,33 @@ export default function Menu() {
   );
 
   const categories = useMemo(() => {
-  const map = new Map();
+    const map = new Map();
 
-  availableItems.forEach((item) => {
-    const en =
-      getLangText(item.category, "en") ||
-      (typeof item.category === "string" ? item.category : "");
-    const ar = getLangText(item.category, "ar");
+    availableItems.forEach((item) => {
+      const en =
+        getLangText(item.category, "en") ||
+        (typeof item.category === "string" ? item.category : "");
+      const ar = getLangText(item.category, "ar");
 
-    const key = catKey(en);
-    if (!key) return;
+      const key = catKey(en);
+      if (!key) return;
 
-    if (!map.has(key)) map.set(key, { en: en.trim(), ar: (ar || "").trim() });
-  });
+      if (!map.has(key)) map.set(key, { en: en.trim(), ar: (ar || "").trim() });
+    });
 
-  const list = Array.from(map.values());
+    const list = Array.from(map.values());
 
-  list.sort((a, b) => {
-    const ra = categoryRank(a.en);
-    const rb = categoryRank(b.en);
-    if (ra !== rb) return ra - rb;
-    return a.en.localeCompare(b.en);
-  });
+    list.sort((a, b) => {
+      const ra = categoryRank(a.en);
+      const rb = categoryRank(b.en);
+      if (ra !== rb) return ra - rb;
+      return a.en.localeCompare(b.en);
+    });
 
-  return [{ en: "All", ar: "الكل" }, ...list];
-}, [availableItems]);
+    return [{ en: "All", ar: "الكل" }, ...list];
+  }, [availableItems]);
 
-
-
-  
-  
-  const sliderImages = [ s2, s1 , s5 , s8]; // or import images
+  const sliderImages = [s2, s1, s5, s8]; // or import images
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {
@@ -148,10 +140,8 @@ export default function Menu() {
   }, []);
 
   const filtered =
-  category === "All"
-    ? availableItems
-        .slice()
-        .sort((a, b) => {
+    category === "All"
+      ? availableItems.slice().sort((a, b) => {
           const aCat =
             getLangText(a.category, "en") ||
             (typeof a.category === "string" ? a.category : "");
@@ -170,18 +160,19 @@ export default function Menu() {
           if (ao !== bo) return ao - bo;
 
           // 3) tie breaker
-          return getLangText(a.name, "en").localeCompare(getLangText(b.name, "en"));
+          return getLangText(a.name, "en").localeCompare(
+            getLangText(b.name, "en"),
+          );
         })
-    : availableItems
-        .filter((i) => {
-          const en =
-            getLangText(i.category, "en") ||
-            (typeof i.category === "string" ? i.category : "");
-          return en === category;
-        })
-        .slice()
-        .sort((a, b) => toNum(a.order) - toNum(b.order));
-
+      : availableItems
+          .filter((i) => {
+            const en =
+              getLangText(i.category, "en") ||
+              (typeof i.category === "string" ? i.category : "");
+            return en === category;
+          })
+          .slice()
+          .sort((a, b) => toNum(a.order) - toNum(b.order));
 
   return (
     <div className="menuPage">
@@ -189,8 +180,20 @@ export default function Menu() {
         <div className="logoContainer">
           <img src={logoImg} alt="Shawarma Story" className="logoImg" />
         </div>
-
         <h1 className="menuTitle">Shawarma Story</h1>
+        {/* <div className="div321">
+          <div className="locins">
+            <a href="https://www.instagram.com/shawarma.story1?igsh=MXBucGl2YzAwc2hyNg==" target="_blank" rel="noreferrer">
+              <img src={instagramImg} alt="Location" className="logoImgLoc" />
+            </a>
+          </div>
+
+          <img src={dot} alt="Location" className="dot" />
+
+          <div className="locins">
+            <img src={locationImg} alt="Instagram" className="logoImgInsta" />
+          </div>
+        </div> */}
 
         <div className="slider">
           <img className="sliderImg" src={sliderImages[slide]} alt="promo" />
@@ -246,7 +249,6 @@ export default function Menu() {
                   <div className="itemNames">
                     <p className="itemNameEn">{nameEn}</p>
                     {nameAr ? <p className="itemNameAr">{nameAr}</p> : null}
-                    
                   </div>
 
                   {price > 0 ? (

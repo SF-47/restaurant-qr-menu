@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   collection,
   addDoc,
@@ -260,6 +261,7 @@ const emptyDraft = {
 };
 
 function LoginGate({ children }) {
+  const navigate = useNavigate();
   const auth = getAuth();
 
   const [user, setUser] = useState(null);
@@ -358,14 +360,19 @@ function LoginGate({ children }) {
   // Logged in -> show logout + admin UI
   return (
     <>
-    <div className="bgLogout">
-      <div className="logoutBtn">
-        <button className="abtn abtnGhost" type="button" onClick={logout}>
-          Logout
+      <div className="btnGoToMenu">
+        <button className="abtn " type="button" onClick={() => navigate("/")}>
+          Go To Menu
         </button>
       </div>
-    </div>
-      
+      <div className="bgLogout">
+        <div className="logoutBtn">
+          <button className="abtn abtnGhost" type="button" onClick={logout}>
+            Logout
+          </button>
+        </div>
+      </div>
+
       {children}
     </>
   );
@@ -849,7 +856,7 @@ export default function AdminMenu() {
               const nameEn = getLangText(it.name, "en");
               const nameAr = getLangText(it.name, "ar");
               const price = toNum(it.price, 0);
-              const order = toNum(it.order, 1);
+              // const order = toNum(it.order, 1);
               const available = it.available !== false;
 
               return (
@@ -865,7 +872,7 @@ export default function AdminMenu() {
                       ) : null}
                       <div className="adminMeta">
                         <span className="pill">{cat.en || "—"}</span>
-                        <span className="pill">Order: {order}</span>
+                        {/* <span className="pill">Order: {order}</span> */}
                         {price ? (
                           <span className="pill">Price: {price}</span>
                         ) : (
