@@ -13,6 +13,8 @@ import s2 from "./assets/images_for_slide/s2.jpeg";
 import s5 from "./assets/images_for_slide/s5.jpeg";
 //import s6 from "./assets/images_for_slide/s6.jpeg";
 import s8 from "./assets/images_for_slide/s8.jpeg";
+import s9 from "./assets/images_for_slide/s9.jpg";
+import s10 from "./assets/images_for_slide/s10.jpg";
 
 const WHATSAPP_NUMBER = "78771076";
 
@@ -126,7 +128,7 @@ export default function Menu() {
     return [{ en: "All", ar: "الكل" }, ...list];
   }, [availableItems]);
 
-  const sliderImages = [s2, s1, s5, s8]; // or import images
+  const sliderImages = [s2, s1, s5, s8, s9, s10]; // or import images
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {
