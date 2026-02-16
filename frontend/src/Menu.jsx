@@ -3,9 +3,9 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 import "./Menu.css";
 import logoImg from "./assets/logo.jpg";
-// import instagramImg from "./assets/instagram.png";
-// import locationImg from "./assets/location.png";
-// import dot from "./assets/dot.png";
+import instagramImg from "./assets/instagram.png";
+import locationImg from "./assets/location.png";
+//import dot from "./assets/dot.png";
 
 import s1 from "./assets/images_for_slide/s1.jpeg";
 import s2 from "./assets/images_for_slide/s2.jpeg";
@@ -181,19 +181,6 @@ export default function Menu() {
           <img src={logoImg} alt="Shawarma Story" className="logoImg" />
         </div>
         <h1 className="menuTitle">Shawarma Story</h1>
-        {/* <div className="div321">
-          <div className="locins">
-            <a href="https://www.instagram.com/shawarma.story1?igsh=MXBucGl2YzAwc2hyNg==" target="_blank" rel="noreferrer">
-              <img src={instagramImg} alt="Location" className="logoImgLoc" />
-            </a>
-          </div>
-
-          <img src={dot} alt="Location" className="dot" />
-
-          <div className="locins">
-            <img src={locationImg} alt="Instagram" className="logoImgInsta" />
-          </div>
-        </div> */}
 
         <div className="slider">
           <img className="sliderImg" src={sliderImages[slide]} alt="promo" />
@@ -270,14 +257,32 @@ export default function Menu() {
         </div>
       )}
 
-      <a
-        className="whatsAppBtn"
-        href={`https://wa.me/${WHATSAPP_NUMBER}`}
-        target="_blank"
-        rel="noreferrer"
-      >
-        Order on WhatsApp
-      </a>
+      <div className="bottomBar">
+        <a
+          href="https://instagram.com/shawarma.story1/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <img src={instagramImg} alt="Instagram" className="iconBtn" />
+        </a>
+
+        <a
+          className="whatsAppBtn"
+          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Order on WhatsApp
+        </a>
+
+        <a
+          href="https://maps.app.goo.gl/Ju8rKTrz2VZzXj2P7?g_st=aw"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <img src={locationImg} alt="Location" className="iconBtn" />
+        </a>
+      </div>
     </div>
   );
 }
