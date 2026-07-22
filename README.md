@@ -9,7 +9,7 @@ A mobile-first QR menu system for restaurants with bilingual English/Arabic supp
 
 ## Live Demo
 
-**Live Demo:** Coming soon  
+**Live Demo:** https://shawarmastory.com  
 **Admin Demo:** Not public for security reasons
 
 ## Screenshots
