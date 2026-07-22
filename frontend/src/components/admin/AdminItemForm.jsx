@@ -7,9 +7,9 @@ const inputClass =
   "min-h-9 w-full rounded-xl border border-primary/15 bg-white px-2.5 py-1.5 text-[13px] text-charcoal shadow-sm outline-none focus:border-orange focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
 const numberInputClass = `${inputClass} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`;
 const primaryButton =
-  "inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft transition duration-150 hover:-translate-y-0.5 hover:from-teal hover:to-leaf hover:shadow-card active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
+  "inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
 const ghostButton =
-  "inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary transition duration-150 hover:-translate-y-0.5 hover:border-orange/40 hover:bg-cream-soft hover:text-orange active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
+  "inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
 
 function formatPriceInput(value) {
   if (value === "" || value == null) return "";

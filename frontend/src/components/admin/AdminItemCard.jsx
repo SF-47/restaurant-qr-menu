@@ -2,9 +2,9 @@ import { getLangText, normalizeCategory, toNum } from "../../utils/categoryUtils
 import { formatPrice } from "../../utils/menuUtils";
 
 const smallButton =
-  "inline-flex min-h-[34px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-3 py-2 text-xs font-black text-white shadow-soft transition duration-150 hover:-translate-y-0.5 hover:from-teal hover:to-leaf hover:shadow-card active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
+  "inline-flex min-h-[34px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-3 py-2 text-xs font-black text-white shadow-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
 const dangerButton =
-  "inline-flex min-h-[34px] items-center justify-center rounded-full bg-gradient-to-br from-red-700 to-red-900 px-3 py-2 text-xs font-black text-white transition duration-150 hover:-translate-y-0.5 hover:from-red-800 hover:to-red-950 active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
+  "inline-flex min-h-[34px] items-center justify-center rounded-full bg-gradient-to-br from-red-700 to-red-900 px-3 py-2 text-xs font-black text-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
 const pillClass =
   "inline-flex min-h-7 items-center rounded-full border border-primary/15 bg-teal/10 px-2.5 py-1 text-xs font-black text-primary";
 const warningClass =
@@ -54,7 +54,7 @@ export default function AdminItemCard({
 
         <div className="flex flex-wrap gap-2 md:justify-end">
           <button
-            className={`inline-flex min-h-[34px] items-center gap-2 rounded-full border px-2.5 py-1.5 text-xs font-black transition duration-150 hover:-translate-y-0.5 hover:shadow-soft active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange ${
+            className={`inline-flex min-h-[34px] items-center gap-2 rounded-full border px-2.5 py-1.5 text-xs font-black transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange ${
               available
                 ? "border-primary/15 bg-leaf/10 text-primary"
                 : "border-red-700/20 bg-red-50 text-red-700"

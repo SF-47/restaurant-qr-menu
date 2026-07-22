@@ -37,7 +37,7 @@ export default function CartDrawer({
             <span className="w-fit rounded-full bg-gold/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-primary sm:py-1 sm:text-[11px]">{t.cart}</span>
             <h2 className="m-0 mt-1.5 text-xl font-black leading-none text-primary sm:text-2xl">{t.yourOrder}</h2>
           </div>
-          <button className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-primary/15 bg-white text-primary transition duration-150 hover:-translate-y-0.5 hover:border-orange/40 hover:bg-cream-soft hover:text-orange active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={onClose} aria-label="Close">
+          <button className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-primary/15 bg-white text-primary" type="button" onClick={onClose} aria-label="Close">
             <IoClose className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
@@ -45,7 +45,7 @@ export default function CartDrawer({
         {cart.length === 0 ? (
           <div className="grid gap-3 p-4 text-center text-muted sm:p-5">
             <p className="m-0">{t.cartEmpty}</p>
-            <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary transition duration-150 hover:-translate-y-0.5 hover:border-orange/40 hover:bg-cream-soft hover:text-orange active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={onClose}>
+            <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary" type="button" onClick={onClose}>
               {t.continueBrowsing}
             </button>
           </div>
@@ -88,7 +88,7 @@ export default function CartDrawer({
                 <FaWhatsapp className="me-1.5 h-4 w-4 flex-none" aria-hidden="true" />
                 {t.orderOnWhatsApp}
               </Button>
-              <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary transition duration-150 hover:-translate-y-0.5 hover:border-red-700/30 hover:bg-red-50 hover:text-red-700 active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={onClear}>
+              <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary" type="button" onClick={onClear}>
                 {t.clearCart}
               </button>
             </div>

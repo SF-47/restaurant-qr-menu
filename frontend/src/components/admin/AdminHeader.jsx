@@ -2,13 +2,13 @@ import { useState } from "react";
 import { IoMenu, IoClose } from "react-icons/io5";
 
 const primaryButton =
-  "inline-flex min-h-10 flex-none items-center justify-center whitespace-nowrap rounded-xl bg-gradient-to-br from-primary to-teal px-3 py-2 text-sm font-black text-white shadow-soft transition duration-150 hover:-translate-y-0.5 hover:from-teal hover:to-leaf hover:shadow-card active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange disabled:cursor-not-allowed disabled:opacity-60 sm:px-4";
+  "inline-flex min-h-10 flex-none items-center justify-center whitespace-nowrap rounded-xl bg-gradient-to-br from-primary to-teal px-3 py-2 text-sm font-black text-white shadow-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange disabled:cursor-not-allowed disabled:opacity-60 sm:px-4";
 
 const menuButton =
-  "inline-flex min-h-10 w-full items-center justify-start gap-2 rounded-xl border border-primary/15 bg-white px-3 py-2 text-sm font-black text-primary transition duration-150 hover:-translate-y-0.5 hover:border-orange/40 hover:bg-cream-soft hover:text-orange active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-10 w-full items-center justify-start gap-2 rounded-xl border border-primary/15 bg-white px-3 py-2 text-sm font-black text-primary transition hover:border-orange/40 hover:bg-cream-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange disabled:cursor-not-allowed disabled:opacity-60";
 
 const dangerMenuButton =
-  "inline-flex min-h-10 w-full items-center justify-start gap-2 rounded-xl border border-red-700/20 bg-red-50 px-3 py-2 text-sm font-black text-red-700 transition duration-150 hover:-translate-y-0.5 hover:bg-red-100 hover:text-red-900 active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
+  "inline-flex min-h-10 w-full items-center justify-start gap-2 rounded-xl border border-red-700/20 bg-red-50 px-3 py-2 text-sm font-black text-red-700 transition hover:bg-red-100 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
 
 export default function AdminHeader({
   onAdd,
