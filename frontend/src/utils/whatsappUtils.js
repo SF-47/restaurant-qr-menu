@@ -9,7 +9,5 @@ export function getWhatsAppUrl(
 }
 
 export function getItemOrderMessage(itemName) {
-  return `مرحبًا، أريد طلب ${itemName} من ${
-    restaurantConfig.name.ar || restaurantConfig.name.en
-  }.`;
+  return `مرحبًا، أريد طلب ${itemName} من ${restaurantConfig.name.en}.`;
 }

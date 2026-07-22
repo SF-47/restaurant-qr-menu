@@ -58,7 +58,7 @@ export function hasPricedItems(cart) {
 
 export function buildCartWhatsAppMessage(cart, note) {
   const lines = [
-    `طلب من ${restaurantConfig.name.ar || restaurantConfig.name.en}`,
+    `طلب من ${restaurantConfig.name.en}`,
     "",
     "مرحبًا، أريد طلب:",
     "",

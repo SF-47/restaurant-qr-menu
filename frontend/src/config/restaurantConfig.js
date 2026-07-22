@@ -8,7 +8,6 @@ import s10 from "../assets/images_for_slide/s10.jpg";
 export const restaurantConfig = {
   name: {
     en: "Shawarma Story",
-    ar: "قصة شاورما",
   },
   tagline: {
     en: "Fresh shawarma, fast pickup.",

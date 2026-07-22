@@ -1,22 +1,22 @@
-# Restaurant QR Menu Web App
+# Shawarma Story QR Menu
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth%20%7C%20Hosting-FFCA28?logo=firebase&logoColor=black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-38B2AC?logo=tailwindcss&logoColor=white)
 
-A mobile-first QR menu system for restaurants with bilingual English/Arabic support, RTL layout, customer cart, WhatsApp ordering, Firebase database integration, Firebase Auth admin management, and Firebase Hosting deployment support.
+A live mobile-first QR menu web app for Shawarma Story with bilingual support, cart ordering, WhatsApp checkout, Firebase database, and admin panel.
 
-## Live Demo
+## Live Website
 
-**Live Demo:** https://shawarmastory.com  
-**Admin Demo:** Not public for security reasons
+**Live website:** https://shawarmastory.com  
+**Admin demo:** Not public for security reasons
 
 ## Screenshots
 
 > Screenshots will be added before the public portfolio release.
 
-| Public menu mobile | Public menu Arabic RTL | Cart drawer |
+| Public menu mobile | Arabic RTL menu | Cart drawer |
 | --- | --- | --- |
 | Screenshot placeholder | Screenshot placeholder | Screenshot placeholder |
 
@@ -26,46 +26,20 @@ A mobile-first QR menu system for restaurants with bilingual English/Arabic supp
 
 ## Features
 
-### Public Customer Menu
-
-- Mobile-first restaurant menu designed for QR code access.
-- Category-based menu browsing.
-- Product availability handling.
-- Restaurant branding, opening hours, maps, Instagram, and WhatsApp links.
-- Loading, empty, and error states for menu data.
-
-### Admin Panel
-
-- Firebase Auth email/password login.
-- Add, edit, delete, search, and filter menu items.
-- Toggle item availability.
-- Manage categories.
-- Dashboard-style menu statistics.
-- Protected admin workflow for restaurant staff.
-
-### Bilingual / RTL
-
-- English and Arabic language support.
-- RTL layout handling for Arabic.
-- Language preference stored locally.
-- Bilingual menu item names and category labels.
-
-### Cart and WhatsApp Ordering
-
-- Add items to cart.
-- Increase, decrease, and remove cart items.
-- Customer notes.
-- Cart total calculation.
-- WhatsApp order message generation.
-- One-click order handoff to WhatsApp.
-
-### Firebase / Infrastructure
-
-- Firebase Firestore for menu item data.
-- Firebase Auth for admin access.
-- Firebase Hosting configuration for SPA deployment.
-- Firestore security rules included for future setup.
-- Environment-based Firebase web configuration.
+- Public QR menu.
+- English/Arabic language support.
+- RTL Arabic layout.
+- Category filtering.
+- Cart and quantity controls.
+- Customer note.
+- WhatsApp order message.
+- Instagram and Google Maps links.
+- Opening hours.
+- Hidden admin panel.
+- Firebase Auth admin login.
+- Firestore menu management.
+- Add, edit, and delete items.
+- Availability and category management.
 
 ## Tech Stack
 
@@ -81,7 +55,7 @@ A mobile-first QR menu system for restaurants with bilingual English/Arabic supp
 ## Project Structure
 
 ```text
-Restaurant QR Menu Web App/
+Story_Res_Menu/
   README.md
   .gitignore
   frontend/
@@ -95,6 +69,8 @@ Restaurant QR Menu Web App/
       App.jsx
       firebase.js
       main.jsx
+      config/
+        restaurantConfig.js
       pages/
         PublicMenuPage.jsx
         AdminMenuPage.jsx
@@ -106,9 +82,6 @@ Restaurant QR Menu Web App/
         menu/
       data/
         constants.js
-      config/
-        restaurantConfig.js
-        restaurantConfig.example.js
       i18n/
         translations.js
         adminTranslations.js
@@ -121,59 +94,33 @@ Restaurant QR Menu Web App/
       assets/
 ```
 
-## Getting Started
+## Local Development
 
 ### Prerequisites
 
 - Node.js
 - npm
-- Firebase project
+- Firebase project access for Shawarma Story
 - Firebase CLI, required only for deployment
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/SF-47/restaurant-qr-menu-web-app.git
-cd restaurant-qr-menu-web-app/frontend
-```
 
 ### Install Dependencies
 
 ```bash
+cd frontend
 npm install
 ```
 
-### Create Environment File
+### Environment Variables
 
-Create a local `.env` file inside `frontend/`:
+Create a local `.env` file inside `frontend/` from the safe example file:
 
 ```bash
 cp .env.example .env
 ```
 
-Then replace the placeholder values with your Firebase web app config.
+Then add the Firebase web app config for the Shawarma Story Firebase project.
 
-### Run Locally
-
-```bash
-npm run dev
-```
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## Environment Variables
-
-The app reads Firebase configuration from Vite environment variables.
+The app reads Firebase configuration from Vite environment variables:
 
 ```env
 VITE_FIREBASE_API_KEY=your_firebase_api_key
@@ -184,90 +131,43 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-Use [frontend/.env.example](frontend/.env.example) as the template. Never commit a real `.env` file.
+Use [frontend/.env.example](frontend/.env.example) as the reference file. Never commit a real `.env` file.
 
-## Firebase Setup
-
-1. Create a Firebase project.
-2. Create a Firestore database.
-3. Enable Email/Password authentication in Firebase Auth.
-4. Create an admin user in Firebase Auth.
-5. Add the Firebase web app config values to `frontend/.env`.
-6. Create an admin document in Firestore:
-
-```text
-admins/{firebase_auth_user_uid}
-```
-
-7. Review and deploy the Firestore rules from `frontend/firestore.rules`.
-8. Build the app and deploy it to Firebase Hosting.
-
-## Using this project as a template
-
-For a new restaurant client:
-
-1. Copy the repo into a new project folder.
-2. Create a new Firebase project for the client.
-3. Create `frontend/.env` from `frontend/.env.example` and add the client's Firebase web app config. Do not put Firebase env values in `restaurantConfig`.
-4. Update `frontend/src/config/restaurantConfig.js` with the client's restaurant name, tagline, WhatsApp number, Instagram URL, Google Maps URL, opening days and hours, currency label, logo, promo images, default language, theme notes, category order, and end categories.
-5. Add or replace logo and promo images under `frontend/src/assets/` or use safe public assets.
-6. Add menu items through the admin panel or with the seed script, keeping the existing Firestore `menuItems` structure.
-7. Create a Firebase Auth admin user.
-8. Create the matching Firestore `admins/{uid}` document.
-9. Run `npm run lint` and `npm run build` inside `frontend/`.
-10. Deploy to Firebase Hosting when ready.
-11. Connect the custom domain in Firebase Hosting.
-12. Generate a QR code pointing to the public menu URL.
-13. Test the menu on a phone, WhatsApp ordering, and admin login before handoff.
-
-Use [TEMPLATE_SETUP_CHECKLIST.md](TEMPLATE_SETUP_CHECKLIST.md) as the client setup checklist.
-
-## Security Notes
-
-- Never commit `.env` files.
-- Never commit `serviceAccountKey.json` or any service account file.
-- Keep service account files outside the repository.
-- Protect admin routes with Firebase Auth and Firestore rules.
-- Configure Firestore rules before using the project in production.
-- Rotate any keys or service accounts that were exposed publicly.
-- Firebase web config values are not service account secrets, but they should still be treated as project-specific configuration.
-
-## Deployment
-
-Install and log in to Firebase CLI:
+### Run Locally
 
 ```bash
-npm install -g firebase-tools
-firebase login
+npm run dev
 ```
 
-Build the frontend:
+### Build
 
 ```bash
-cd frontend
 npm run build
 ```
 
-Deploy hosting:
+### Preview Build
 
 ```bash
-firebase deploy --only hosting
+npm run preview
 ```
 
-Deploy Firestore rules when ready:
+## Firebase Notes
 
-```bash
-firebase deploy --only firestore:rules
-```
+- Firestore stores menu items in the existing `menuItems` collection.
+- Admin access uses Firebase Auth.
+- Admin authorization depends on Firestore admin documents.
+- Firestore rules live in [frontend/firestore.rules](frontend/firestore.rules).
+- Firebase Hosting configuration lives in [frontend/firebase.json](frontend/firebase.json).
 
-## Roadmap
+## Security Notes
 
-- Order database.
-- Order status dashboard.
-- Analytics.
-- Multi-restaurant support.
-- Image upload.
-- Payment integration.
+- Do not commit `.env` files.
+- Do not commit `serviceAccountKey.json` or any service account file.
+- Keep service account files outside the repository.
+- The admin route is intentionally not listed publicly.
+- Admin credentials are not stored in this repo.
+- Protect admin access with Firebase Auth and Firestore rules.
+- Firebase web config values are project-specific configuration, not service account secrets.
 
 ## Author
 
@@ -275,5 +175,3 @@ firebase deploy --only firestore:rules
 
 - GitHub: [SF-47](https://github.com/SF-47)
 - LinkedIn: [www.linkedin.com/in/sami-farhat-46692641a](https://www.linkedin.com/in/sami-farhat-46692641a)
-
-
