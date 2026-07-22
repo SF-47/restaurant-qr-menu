@@ -7,10 +7,6 @@ export function getWhatsAppUrl(
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
-export function getItemOrderMessage(itemName, language = "en") {
-  if (language === "ar") {
-    return `مرحبًا، أريد طلب ${itemName} من Story Shawarma.`;
-  }
-
-  return `Hello, I want to order ${itemName} from Shawarma Story.`;
+export function getItemOrderMessage(itemName) {
+  return `مرحبًا، أريد طلب ${itemName} من Story Shawarma.`;
 }

@@ -18,7 +18,7 @@ export default function AdminCategoryCombo({ categories, value, onPickObj, t }) 
     <div className="relative">
       <div className="flex items-center gap-1.5">
         <button
-          className="inline-flex min-h-9 min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border border-primary/15 bg-white px-2.5 py-1.5 text-left text-[13px] font-black text-primary shadow-sm transition duration-150 hover:border-orange/40 hover:bg-cream-soft hover:text-orange active:scale-[0.99] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
+          className="inline-flex min-h-9 min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border border-primary/15 bg-white px-2.5 py-1.5 text-left text-[13px] font-black text-primary shadow-sm focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
           type="button"
           onClick={toggleOpen}
         >
@@ -37,10 +37,10 @@ export default function AdminCategoryCombo({ categories, value, onPickObj, t }) 
             {categories.map((category) => (
               <button
                 key={category.en}
-                className={`min-h-9 flex-none rounded-full border px-3 py-1.5 text-xs font-black shadow-sm transition duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange ${
+                className={`min-h-9 flex-none rounded-full border px-3 py-1.5 text-xs font-black shadow-sm focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange ${
                   catKey(category.en) === catKey(selectedText)
                     ? "border-transparent bg-gradient-to-br from-primary to-teal text-white"
-                    : "border-primary/15 bg-white text-primary hover:border-orange/40 hover:bg-teal/10 hover:text-orange"
+                    : "border-primary/15 bg-white text-primary hover:bg-teal/10"
                 }`}
                 type="button"
                 onClick={() => pick(category)}

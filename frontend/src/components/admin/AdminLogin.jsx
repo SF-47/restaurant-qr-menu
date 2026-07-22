@@ -13,7 +13,7 @@ const pageClass =
 const inputClass =
   "min-h-10 w-full rounded-xl border border-primary/15 bg-white px-3 py-2 text-sm text-charcoal shadow-sm outline-none focus:border-orange focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
 const buttonClass =
-  "inline-flex min-h-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft transition duration-150 hover:-translate-y-0.5 hover:from-teal hover:to-leaf hover:shadow-card active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
+  "inline-flex min-h-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
 
 export default function AdminLogin({ children, onUserChange, actions, t, language, onLanguageChange }) {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ export default function AdminLogin({ children, onUserChange, actions, t, languag
           <div className="flex w-fit rounded-full border border-primary/15 bg-cream-soft p-1">
             {["en", "ar"].map((code) => (
               <button
-                className={`min-h-8 rounded-full px-3 text-xs font-black transition duration-150 hover:bg-primary/10 hover:text-orange active:scale-95 ${
+                className={`min-h-8 rounded-full px-3 text-xs font-black transition ${
                   language === code ? "bg-primary text-white shadow-soft" : "text-primary"
                 }`}
                 key={code}

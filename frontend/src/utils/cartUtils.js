@@ -55,30 +55,27 @@ export function hasPricedItems(cart) {
   return cart.some((entry) => getPrice(entry.item) > 0);
 }
 
-export function buildCartWhatsAppMessage(cart, note, language) {
-  const isArabic = language === "ar";
-  const lines = isArabic
-    ? ["🟢 طلب من Story Shawarma", "", "مرحبًا، أريد طلب:", ""]
-    : ["🟢 Shawarma Story Order", "", "Hello, I want to order:", ""];
+export function buildCartWhatsAppMessage(cart, note) {
+  const lines = ["🟢 طلب من Story Shawarma", "", "مرحبًا، أريد طلب:", ""];
 
   cart.forEach((entry, index) => {
-    const name = getItemName(entry.item, language);
+    const name = getItemName(entry.item, "ar");
     const price = getPrice(entry.item);
     const subtotal = price * entry.quantity;
 
     lines.push(`${index + 1}) ${name}`);
-    lines.push(`${isArabic ? "الكمية" : "Qty"}: ${entry.quantity}`);
-    lines.push(`${isArabic ? "المجموع" : "Total"}: ${formatPrice(subtotal)}`);
+    lines.push(`الكمية: ${entry.quantity}`);
+    lines.push(`المجموع: ${formatPrice(subtotal)}`);
     lines.push("");
   });
 
   lines.push("--------------------");
-  lines.push(`${isArabic ? "مجموع الطلب" : "Order Total"}: ${formatPrice(getCartTotal(cart))}`);
+  lines.push(`مجموع الطلب: ${formatPrice(getCartTotal(cart))}`);
 
   const cleanNote = note.trim();
   if (cleanNote) {
     lines.push("");
-    lines.push(isArabic ? "ملاحظة:" : "Note:");
+    lines.push("ملاحظة:");
     lines.push(cleanNote);
   }
 

@@ -23,7 +23,7 @@ export default function AdminModal({
           </div>
           {headerRight ? <div className="ms-auto">{headerRight}</div> : null}
           <button
-            className="ms-auto inline-flex h-7 w-7 flex-none items-center justify-center rounded-full border border-primary/15 bg-white text-sm font-black text-primary transition duration-150 hover:-translate-y-0.5 hover:border-orange/40 hover:bg-cream-soft hover:text-orange active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
+            className="ms-auto inline-flex h-7 w-7 flex-none items-center justify-center rounded-full border border-primary/15 bg-white text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
             onClick={onClose}
             type="button"
             aria-label={closeLabel}

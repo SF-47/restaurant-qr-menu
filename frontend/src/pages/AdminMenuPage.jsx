@@ -476,10 +476,10 @@ export default function AdminMenuPage() {
               </p>
             </div>
             <div className="sticky bottom-[-10px] z-10 -mx-2.5 -mb-2.5 mt-2.5 flex flex-wrap justify-end gap-2 border-t border-primary/10 bg-gradient-to-b from-white/90 to-white px-2.5 py-2.5 sm:-mx-3 sm:-mb-3 sm:px-3">
-              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary transition duration-150 hover:-translate-y-0.5 hover:border-orange/40 hover:bg-cream-soft hover:text-orange active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={closeAddCategory}>
+              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={closeAddCategory}>
                 {t.cancel}
               </button>
-              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft transition duration-150 hover:-translate-y-0.5 hover:from-teal hover:to-leaf hover:shadow-card active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={saveAddedCategory}>
+              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={saveAddedCategory}>
                 {t.saveCategory}
               </button>
             </div>
@@ -512,10 +512,10 @@ export default function AdminMenuPage() {
               {t.deleteItemCopy} <b>{getLangText(draft.name, language) || getLangText(draft.name, "en") || t.unknownItem}</b>
             </p>
             <div className="sticky bottom-[-10px] z-10 -mx-2.5 -mb-2.5 mt-2.5 flex flex-wrap justify-end gap-2 border-t border-primary/10 bg-gradient-to-b from-white/90 to-white px-2.5 py-2.5 sm:-mx-3 sm:-mb-3 sm:px-3">
-              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary transition duration-150 hover:-translate-y-0.5 hover:border-orange/40 hover:bg-cream-soft hover:text-orange active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={closeModal}>
+              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={closeModal}>
                 {t.cancel}
               </button>
-              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-red-700 to-red-900 px-4 py-2 text-sm font-black text-white transition duration-150 hover:-translate-y-0.5 hover:from-red-800 hover:to-red-950 active:translate-y-0 active:scale-[0.98] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={remove} disabled={loading}>
+              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-red-700 to-red-900 px-4 py-2 text-sm font-black text-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={remove} disabled={loading}>
                 {loading ? t.deleting : t.delete}
               </button>
             </div>
