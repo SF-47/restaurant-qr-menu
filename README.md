@@ -4,7 +4,6 @@
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth%20%7C%20Hosting-FFCA28?logo=firebase&logoColor=black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-38B2AC?logo=tailwindcss&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 A mobile-first QR menu system for restaurants with bilingual English/Arabic support, RTL layout, customer cart, WhatsApp ordering, Firebase database integration, Firebase Auth admin management, and Firebase Hosting deployment support.
 
@@ -254,6 +253,4 @@ firebase deploy --only firestore:rules
 - GitHub: [SF-47](https://github.com/SF-47)
 - LinkedIn: [www.linkedin.com/in/sami-farhat-46692641a](https://www.linkedin.com/in/sami-farhat-46692641a)
 
-## License
 
-MIT License placeholder.
