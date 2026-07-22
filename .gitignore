@@ -1,19 +1,36 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+dist-ssr/
+
+# Environment files
 .env
+.env.*
+*.env
+!.env.example
+
+# Firebase secrets and local cache
 serviceAccountKey.json
+*serviceAccount*.json
+.firebase/
+
+# Local scripts/data
 updateMenuItems.mjs
-package-lock.json
-package.json
-node_modules
-dist
-dist-ssr
 *.local
 
 # Editor directories and files
@@ -21,6 +38,7 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
