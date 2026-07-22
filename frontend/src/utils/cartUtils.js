@@ -1,6 +1,7 @@
 import { formatPrice, getItemName, getPrice } from "./menuUtils";
+import restaurantConfig from "../config/restaurantConfig";
 
-const CART_STORAGE_KEY = "shawarma-story-cart";
+const CART_STORAGE_KEY = `${restaurantConfig.storageKeyPrefix}-cart`;
 
 export function getStoredCart() {
   if (typeof window === "undefined") return [];
@@ -56,7 +57,12 @@ export function hasPricedItems(cart) {
 }
 
 export function buildCartWhatsAppMessage(cart, note) {
-  const lines = ["🟢 طلب من Story Shawarma", "", "مرحبًا، أريد طلب:", ""];
+  const lines = [
+    `طلب من ${restaurantConfig.name.ar || restaurantConfig.name.en}`,
+    "",
+    "مرحبًا، أريد طلب:",
+    "",
+  ];
 
   cart.forEach((entry, index) => {
     const name = getItemName(entry.item, "ar");

@@ -31,6 +31,7 @@ import {
   updateCartQuantity,
 } from "../utils/cartUtils";
 import { getItemName, getPrice, hasSuspiciousLowPrice } from "../utils/menuUtils";
+import restaurantConfig from "../config/restaurantConfig";
 
 export default function PublicMenuPage() {
   const [items, setItems] = useState([]);
@@ -88,7 +89,7 @@ export default function PublicMenuPage() {
     if (suspiciousItems.length === 0) return;
 
     console.warn(
-      "Shawarma Story menu has suspicious low LBP prices. Fix these values in Firestore/Admin instead of multiplying in code:",
+      `${restaurantConfig.name.en} menu has suspicious low ${restaurantConfig.currencyLabel} prices. Fix these values in Firestore/Admin instead of multiplying in code:`,
       suspiciousItems.map((item) => ({
         id: item.id,
         name: getItemName(item, "en") || getItemName(item, "ar"),

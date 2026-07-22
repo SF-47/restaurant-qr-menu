@@ -1,7 +1,7 @@
+import restaurantConfig from "../config/restaurantConfig";
+
 export const translations = {
   en: {
-    brandName: "Shawarma Story",
-    tagline: "Fresh shawarma, fast pickup.",
     whatsapp: "WhatsApp",
     location: "Location",
     menu: "Menu",
@@ -25,24 +25,16 @@ export const translations = {
     openInMaps: "Open in Maps",
     instagram: "Instagram",
     openingHours: "Opening Hours",
-    days: "Monday - Sunday",
-    hours: "10:00 AM - 11:00 PM",
     readyToOrder: "Ready to order?",
     contactHint: "Contact us on WhatsApp or visit our location.",
     noItems: "No items available in this category.",
     loadingMenu: "Loading menu...",
     loadFailed: "Failed to load menu. Please try again.",
     freshDaily: "Fresh Daily",
-    promoText: "Authentic shawarma, crispy fries, garlic sauce.",
-    featuredAlt: "Featured shawarma and Lebanese street food",
     maps: "Maps",
-    generalWhatsAppMessage: "Hello, I want to order from Shawarma Story.",
-    cartWhatsAppIntro: "Hello Shawarma Story, I want to order:",
     noteLabel: "Note:",
   },
   ar: {
-    brandName: "Shawarma Story",
-    tagline: "شاورما طازجة وطلبات سريعة.",
     whatsapp: "واتساب",
     location: "الموقع",
     menu: "القائمة",
@@ -74,15 +66,35 @@ export const translations = {
     loadingMenu: "جارٍ تحميل القائمة...",
     loadFailed: "تعذر تحميل القائمة. حاول مرة أخرى.",
     freshDaily: "طازج يوميًا",
-    promoText: "شاورما أصلية، بطاطا مقرمشة، وثوم شهي.",
-    featuredAlt: "صور شاورما ومأكولات لبنانية",
     maps: "الخريطة",
-    generalWhatsAppMessage: "مرحبًا، أريد الطلب من Shawarma Story.",
-    cartWhatsAppIntro: "مرحبًا Shawarma Story، أريد طلب:",
     noteLabel: "ملاحظة:",
   },
 };
 
 export function getTranslations(language) {
-  return translations[language] || translations.en;
+  const selected = translations[language] || translations.en;
+  const lang = translations[language] ? language : "en";
+  const restaurantName = restaurantConfig.name[lang] || restaurantConfig.name.en;
+
+  return {
+    ...selected,
+    brandName: restaurantName,
+    tagline: restaurantConfig.tagline[lang] || restaurantConfig.tagline.en,
+    days: restaurantConfig.opening.days[lang] || restaurantConfig.opening.days.en,
+    hours: restaurantConfig.opening.hours[lang] || restaurantConfig.opening.hours.en,
+    promoText:
+      restaurantConfig.marketing.promoText[lang] ||
+      restaurantConfig.marketing.promoText.en,
+    featuredAlt:
+      restaurantConfig.marketing.featuredAlt[lang] ||
+      restaurantConfig.marketing.featuredAlt.en,
+    generalWhatsAppMessage:
+      lang === "ar"
+        ? `مرحبًا، أريد الطلب من ${restaurantName}.`
+        : `Hello, I want to order from ${restaurantName}.`,
+    cartWhatsAppIntro:
+      lang === "ar"
+        ? `مرحبًا ${restaurantName}، أريد طلب:`
+        : `Hello ${restaurantName}, I want to order:`,
+  };
 }

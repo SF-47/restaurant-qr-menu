@@ -107,6 +107,9 @@ Restaurant QR Menu Web App/
         menu/
       data/
         constants.js
+      config/
+        restaurantConfig.js
+        restaurantConfig.example.js
       i18n/
         translations.js
         adminTranslations.js
@@ -199,6 +202,26 @@ admins/{firebase_auth_user_uid}
 
 7. Review and deploy the Firestore rules from `frontend/firestore.rules`.
 8. Build the app and deploy it to Firebase Hosting.
+
+## Using this project as a template
+
+For a new restaurant client:
+
+1. Copy the repo into a new project folder.
+2. Create a new Firebase project for the client.
+3. Create `frontend/.env` from `frontend/.env.example` and add the client's Firebase web app config. Do not put Firebase env values in `restaurantConfig`.
+4. Update `frontend/src/config/restaurantConfig.js` with the client's restaurant name, tagline, WhatsApp number, Instagram URL, Google Maps URL, opening days and hours, currency label, logo, promo images, default language, theme notes, category order, and end categories.
+5. Add or replace logo and promo images under `frontend/src/assets/` or use safe public assets.
+6. Add menu items through the admin panel or with the seed script, keeping the existing Firestore `menuItems` structure.
+7. Create a Firebase Auth admin user.
+8. Create the matching Firestore `admins/{uid}` document.
+9. Run `npm run lint` and `npm run build` inside `frontend/`.
+10. Deploy to Firebase Hosting when ready.
+11. Connect the custom domain in Firebase Hosting.
+12. Generate a QR code pointing to the public menu URL.
+13. Test the menu on a phone, WhatsApp ordering, and admin login before handoff.
+
+Use [TEMPLATE_SETUP_CHECKLIST.md](TEMPLATE_SETUP_CHECKLIST.md) as the client setup checklist.
 
 ## Security Notes
 

@@ -1,4 +1,5 @@
 import { getCategoryName, getLangText, getLocalizedText } from "./categoryUtils";
+import restaurantConfig from "../config/restaurantConfig";
 
 export function getPrice(item) {
   if (typeof item.price === "number") return item.price;
@@ -8,7 +9,7 @@ export function getPrice(item) {
 
 export function formatPrice(price) {
   if (!price) return "";
-  return `LBP ${price.toLocaleString("en-US")}`;
+  return `${restaurantConfig.currencyLabel} ${price.toLocaleString("en-US")}`;
 }
 
 export function hasSuspiciousLowPrice(item) {
@@ -70,10 +71,15 @@ export function getItemDescriptionParts(item) {
 }
 
 export function getBestSellerItems(items) {
+  const featuredKeywords = restaurantConfig.marketing.featuredKeywords.map((keyword) =>
+    keyword.toLowerCase(),
+  );
   const preferred = (items || []).filter((item) => {
     const name = getLangText(item.name, "en").toLowerCase();
     const cat = getCategoryName(item).toLowerCase();
-    return cat.includes("offer") || name.includes("story") || name.includes("shawarma");
+    return featuredKeywords.some(
+      (keyword) => cat.includes(keyword) || name.includes(keyword),
+    );
   });
 
   return (preferred.length ? preferred : items || []).slice(0, 3);

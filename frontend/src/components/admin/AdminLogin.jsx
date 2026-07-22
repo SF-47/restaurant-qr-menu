@@ -7,6 +7,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { ASSETS } from "../../data/constants";
+import restaurantConfig from "../../config/restaurantConfig";
 
 const pageClass =
   "min-h-screen bg-cream p-3 text-charcoal [background:radial-gradient(circle_at_top_left,rgba(246,170,45,0.18),transparent_22rem),linear-gradient(180deg,#fff7e8,#fffdf8_34rem,#fffaf0)]";
@@ -71,7 +72,7 @@ export default function AdminLogin({ children, onUserChange, actions, t, languag
       <div className={`${pageClass} grid place-items-center p-5`} dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
         <section className="grid w-full max-w-[430px] gap-4 rounded-[22px] border border-primary/15 bg-white/90 p-5 shadow-card" aria-labelledby="admin-login-title">
           <div className="flex items-center gap-3">
-            <img className="h-14 w-14 rounded-full object-cover shadow-soft" src={ASSETS.logo} alt="Shawarma Story logo" />
+            <img className="h-14 w-14 rounded-full object-cover shadow-soft" src={ASSETS.logo} alt={`${restaurantConfig.name.en} logo`} />
             <div className="min-w-0 flex-1">
               <h1 id="admin-login-title" className="m-0 text-2xl font-black leading-none text-primary">
                 {t.adminBrand}

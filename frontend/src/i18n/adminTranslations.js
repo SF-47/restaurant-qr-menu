@@ -1,6 +1,7 @@
+import restaurantConfig from "../config/restaurantConfig";
+
 export const adminTranslations = {
   en: {
-    adminBrand: "Shawarma Story Admin",
     menuManagement: "Menu Management",
     adminSubtitle: "Manage QR menu items, categories, prices, and availability.",
     loginSubtitle: "Menu Management",
@@ -78,7 +79,6 @@ export const adminTranslations = {
     close: "Close",
   },
   ar: {
-    adminBrand: "إدارة Shawarma Story",
     menuManagement: "إدارة القائمة",
     adminSubtitle: "إدارة أصناف قائمة QR والتصنيفات والأسعار والتوفر.",
     loginSubtitle: "إدارة القائمة",
@@ -158,5 +158,13 @@ export const adminTranslations = {
 };
 
 export function getAdminTranslations(language) {
-  return adminTranslations[language] || adminTranslations.en;
+  const selected = adminTranslations[language] || adminTranslations.en;
+  const lang = adminTranslations[language] ? language : "en";
+  const restaurantName = restaurantConfig.name[lang] || restaurantConfig.name.en;
+
+  return {
+    ...selected,
+    adminBrand:
+      lang === "ar" ? `إدارة ${restaurantName}` : `${restaurantName} Admin`,
+  };
 }

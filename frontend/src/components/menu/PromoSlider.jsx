@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { ASSETS, BRAND_NAME } from "../../data/constants";
+import restaurantConfig from "../../config/restaurantConfig";
 
-export default function PromoSlider({ altText = "Featured shawarma and Lebanese street food" }) {
+export default function PromoSlider({
+  altText = restaurantConfig.marketing.featuredAlt.en,
+}) {
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {

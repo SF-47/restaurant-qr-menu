@@ -1,5 +1,7 @@
-const STORAGE_KEY = "shawarma-story-language";
-export const DEFAULT_LANGUAGE = "en";
+import restaurantConfig from "../config/restaurantConfig";
+
+const STORAGE_KEY = `${restaurantConfig.storageKeyPrefix}-language`;
+export const DEFAULT_LANGUAGE = restaurantConfig.defaultLanguage;
 export const SUPPORTED_LANGUAGES = ["en", "ar"];
 
 export function isSupportedLanguage(language) {
