@@ -2,14 +2,11 @@ import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { IoLocationSharp } from "react-icons/io5";
 import { ASSETS, BRAND_NAME, INSTAGRAM_URL, MAPS_URL } from "../../data/constants";
 import { getWhatsAppUrl } from "../../utils/whatsappUtils";
-import CartButton from "../cart/CartButton";
 
 export default function Header({
   language,
   onLanguageChange,
   t,
-  cartCount = 0,
-  onOpenCart,
 }) {
   return (
     <header
@@ -33,12 +30,6 @@ export default function Header({
             </span>
           </a>
 
-          <CartButton
-            count={cartCount}
-            onClick={onOpenCart}
-            t={t}
-            variant="icon"
-          />
         </div>
 
         <div className="flex min-w-0 items-center gap-1.5">

@@ -5,6 +5,7 @@ import CategoryFilter from "../components/menu/CategoryFilter";
 import HeroSection from "../components/menu/HeroSection";
 import LocationSection from "../components/menu/LocationSection";
 import MenuGrid from "../components/menu/MenuGrid";
+import CartButton from "../components/cart/CartButton";
 import CartDrawer from "../components/cart/CartDrawer";
 import ErrorState from "../components/common/ErrorState";
 import LoadingState from "../components/common/LoadingState";
@@ -141,8 +142,6 @@ export default function PublicMenuPage() {
         language={language}
         onLanguageChange={setLanguage}
         t={t}
-        cartCount={cartCount}
-        onOpenCart={() => setCartOpen(true)}
       />
 
       <main>
@@ -187,6 +186,12 @@ export default function PublicMenuPage() {
       </main>
 
       <Footer t={t} />
+      <CartButton
+        count={cartCount}
+        onClick={() => setCartOpen(true)}
+        t={t}
+        variant="corner"
+      />
       <CartDrawer
         open={cartOpen}
         cart={cart}
