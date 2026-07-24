@@ -61,8 +61,10 @@ export default function PublicMenuPage() {
       setLoading(true);
       try {
         setError("");
+
         const snap = await getDocs(collection(db, "menuItems"));
-        setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const menuData = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setItems(menuData);
       } catch (e) {
         console.error("Firestore load failed:", e);
         setItems([]);
