@@ -5,122 +5,111 @@
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth%20%7C%20Hosting-FFCA28?logo=firebase&logoColor=black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-38B2AC?logo=tailwindcss&logoColor=white)
 
-A live mobile-first QR menu web app for Shawarma Story with bilingual support, cart ordering, WhatsApp checkout, Firebase database, and admin panel.
+A live, mobile-first QR menu for Shawarma Story, a restaurant in Lebanon. Customers scan a QR code, browse the menu in English or Arabic, build an order, and send it to the restaurant on WhatsApp. Staff manage the menu from an admin panel backed by Firebase.
 
-## Live Website
+## Live Links
 
-**Live website:** https://shawarmastory.com  
-**Admin demo:** Not public for security reasons
+| | |
+| --- | --- |
+| **Live menu** | https://shawarmastory.com |
+| **Admin demo** | https://shawarmastory.com/admin-demo |
+
+The admin demo is the real admin panel running on sample data. There is no login, nothing is saved, and every change resets on reload. The production admin panel is private and protected by Firebase Auth and Firestore security rules.
 
 ## Screenshots
 
-> Screenshots will be added before the public portfolio release.
-
-| Public menu mobile | Arabic RTL menu | Cart drawer |
+| Menu (mobile) | Arabic, right-to-left | Cart |
 | --- | --- | --- |
-| Screenshot placeholder | Screenshot placeholder | Screenshot placeholder |
+| ![Public menu on mobile](docs/screenshots/menu-mobile.png) | ![Arabic right-to-left menu](docs/screenshots/menu-arabic.png) | ![Cart drawer](docs/screenshots/cart-drawer.png) |
 
-| Admin dashboard | Admin item form |
+| Admin dashboard | Item form with validation |
 | --- | --- |
-| Screenshot placeholder | Screenshot placeholder |
+| ![Admin dashboard](docs/screenshots/admin-dashboard.png) | ![Admin item form showing validation errors](docs/screenshots/admin-item-form.png) |
 
 ## Features
 
-- Public QR menu.
-- English/Arabic language support.
-- RTL Arabic layout.
-- Category filtering.
-- Cart and quantity controls.
-- Customer note.
-- WhatsApp order message.
-- Instagram and Google Maps links.
-- Opening hours.
-- Hidden admin panel.
-- Firebase Auth admin login.
-- Firestore menu management.
-- Add, edit, and delete items.
-- Availability and category management.
+### Customer menu
+- English and Arabic, with a full right-to-left layout for Arabic.
+- Category bar that stays pinned while scrolling, with items grouped by category.
+- Cart with quantities, a running total, and a note for the kitchen.
+- Orders sent as a pre-filled WhatsApp message.
+- Opening hours, Google Maps, and Instagram links.
+- Carts saved in the browser are re-checked against the live menu, so an order never carries an old price or a removed item.
+- Accessible: keyboard and screen-reader friendly dialogs, visible focus, and respect for reduced-motion settings.
+
+### Admin panel
+- Add, edit, and delete items, and switch availability on or off.
+- Search, filter by category and availability.
+- Rename or remove categories across all items in one atomic update.
+- Validation that blocks Arabic text in the English name field (and the reverse), requires both names and a price, and asks for confirmation on prices that look entered in thousands.
+- Customer-visible items with problems are flagged as "Needs fixing".
 
 ## Tech Stack
 
-- React
-- Vite
-- Tailwind CSS
-- Firebase Firestore
-- Firebase Auth
-- Firebase Hosting
-- React Router
+- React 19, React Router 7
+- Vite 7
+- Tailwind CSS 3
+- Firebase Firestore, Auth, and Hosting
 - React Icons
+- Node's built-in test runner (`node --test`)
+
+## How It Works
+
+- **Data access goes through a small repository interface** (`list`, `add`, `update`, `updateMany`, `remove`). The real admin uses a Firestore implementation; the public demo uses an in-memory one that never imports Firebase. Both run the same `AdminDashboard` component.
+- **Security is enforced on the server.** Firestore rules allow anyone to read the menu but only users listed in the `admins` collection to write. The admin route URL is not public, but the rules are what protect the data.
+- **The admin code is lazy-loaded**, so customers never download the admin UI or Firebase Auth.
 
 ## Project Structure
 
 ```text
 Story_Res_Menu/
   README.md
-  .gitignore
+  docs/screenshots/
   frontend/
     .env.example
     firebase.json
     firestore.rules
     package.json
-    vite.config.js
-    tailwind.config.js
     src/
-      App.jsx
+      App.jsx                  Routes (menu, admin, admin demo)
       firebase.js
-      main.jsx
-      config/
-        restaurantConfig.js
+      config/restaurantConfig.js
       pages/
         PublicMenuPage.jsx
-        AdminMenuPage.jsx
+        AdminMenuPage.jsx      Login + Firestore
+        AdminDemoPage.jsx      Sample data, no login
       components/
-        admin/
+        admin/                 AdminDashboard and its parts
         cart/
         common/
         layout/
         menu/
+      services/
+        firestoreMenuRepository.js
+        memoryMenuRepository.js
       data/
         constants.js
+        demoMenu.js
       i18n/
-        translations.js
-        adminTranslations.js
-      utils/
-        cartUtils.js
-        categoryUtils.js
-        languageUtils.js
-        menuUtils.js
-        whatsappUtils.js
-      assets/
+      utils/                   Cart, category, validation, WhatsApp helpers
 ```
 
 ## Local Development
 
 ### Prerequisites
 
-- Node.js
-- npm
-- Firebase project access for Shawarma Story
-- Firebase CLI, required only for deployment
+- Node.js and npm
+- Access to the Shawarma Story Firebase project (for the live menu and admin)
 
-### Install Dependencies
+### Setup
 
 ```bash
 cd frontend
 npm install
-```
-
-### Environment Variables
-
-Create a local `.env` file inside `frontend/` from the safe example file:
-
-```bash
 cp .env.example .env
 ```
 
-Then add the Firebase web app config for the Shawarma Story Firebase project.
-
-The app reads Firebase configuration from Vite environment variables:
+Fill in `.env` with the Firebase web app config:
 
 ```env
 VITE_FIREBASE_API_KEY=your_firebase_api_key
@@ -131,43 +120,33 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-Use [frontend/.env.example](frontend/.env.example) as the reference file. Never commit a real `.env` file.
+Never commit a real `.env` file.
 
-### Run Locally
+### Scripts
 
-```bash
-npm run dev
-```
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server (add `-- --host` to open it on your phone) |
+| `npm test` | Run the unit tests |
+| `npm run lint` | Run ESLint |
+| `npm run build` | Build for production into `dist/` |
+| `npm run preview` | Serve the production build locally |
 
-### Build
+### Deploy
 
 ```bash
 npm run build
+npx firebase-tools deploy --only hosting
 ```
 
-### Preview Build
-
-```bash
-npm run preview
-```
-
-## Firebase Notes
-
-- Firestore stores menu items in the existing `menuItems` collection.
-- Admin access uses Firebase Auth.
-- Admin authorization depends on Firestore admin documents.
-- Firestore rules live in [frontend/firestore.rules](frontend/firestore.rules).
-- Firebase Hosting configuration lives in [frontend/firebase.json](frontend/firebase.json).
+Firestore rules are deployed separately with `--only firestore:rules`.
 
 ## Security Notes
 
-- Do not commit `.env` files.
-- Do not commit `serviceAccountKey.json` or any service account file.
-- Keep service account files outside the repository.
-- The admin route is intentionally not listed publicly.
-- Admin credentials are not stored in this repo.
-- Protect admin access with Firebase Auth and Firestore rules.
-- Firebase web config values are project-specific configuration, not service account secrets.
+- Do not commit `.env` files or any service account file.
+- Admin writes are enforced by Firestore rules, not by hiding the admin URL.
+- The admin demo uses only in-memory data and makes no Firebase requests.
+- Firebase web config values identify the project; they are not secrets. Access is controlled by Auth and the security rules.
 
 ## Author
 
