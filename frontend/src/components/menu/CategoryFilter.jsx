@@ -1,5 +1,6 @@
 import { getCategoryLabel } from "../../utils/categoryUtils";
 
+// Sticks directly below the h-14 header.
 export default function CategoryFilter({
   categories,
   selectedCategory,
@@ -7,37 +8,37 @@ export default function CategoryFilter({
   language,
 }) {
   return (
-    <div
-      className="sticky top-[82px] z-40 mb-2 flex gap-1.5 overflow-x-auto bg-white/95 px-2 py-1.5 backdrop-blur [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:top-[62px]"
-      aria-label="Menu categories"
-    >
-      {categories.map((category) => {
-        const isSelected = selectedCategory === category.key;
-        const isOffer = category.key === "offers";
+    <div className="sticky top-14 z-20 -mx-4 mb-4 border-b border-primary/10 bg-cream-soft">
+      <div
+        className="flex gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="group"
+        aria-label="Menu categories"
+      >
+        {categories.map((category) => {
+          const isSelected = selectedCategory === category.key;
+          const isOffer = category.key === "offers";
 
-        return (
-          <button
-            key={category.key || category.en}
-            onClick={() => onSelectCategory(category.key)}
-            className={` mt-2.5 min-h-9 min-w-[68px] flex-none rounded-full border px-2.5 py-1.5 text-xs font-black shadow-sm sm:min-h-[42px] sm:min-w-[76px] sm:px-3 sm:py-2 sm:text-[13px] ${
-              isSelected
-                ? isOffer
-                  ? "border-transparent bg-gradient-to-br from-orange to-gold text-white"
-                  : "border-transparent bg-gradient-to-br from-primary to-teal text-white"
-                : isOffer
-                  ? "border-orange/30 bg-gold/20 text-orange"
-                  : "border-primary/15 bg-white text-primary"
-            }`}
-            type="button"
-            aria-pressed={isSelected}
-          >
-            <span>
-              {isOffer ? "★ " : ""}
+          return (
+            <button
+              key={category.key || category.en}
+              onClick={() => onSelectCategory(category.key)}
+              className={`min-h-9 flex-none whitespace-nowrap rounded-full border px-4 text-sm font-bold transition-colors ${
+                isSelected
+                  ? isOffer
+                    ? "border-orange bg-orange text-white"
+                    : "border-primary bg-primary text-white"
+                  : isOffer
+                    ? "border-orange/40 bg-white text-orange"
+                    : "border-primary/15 bg-white text-primary hover:border-primary/40"
+              }`}
+              type="button"
+              aria-pressed={isSelected}
+            >
               {getCategoryLabel(category, language)}
-            </span>
-          </button>
-        );
-      })}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

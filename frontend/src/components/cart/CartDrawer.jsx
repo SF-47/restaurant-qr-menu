@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import Button from "../common/Button";
@@ -23,6 +24,30 @@ export default function CartDrawer({
   onRemove,
   onClear,
 }) {
+  const closeRef = useRef(null);
+
+  // Dialog behavior: focus the close button, close on Escape, lock page
+  // scroll behind the sheet, and give focus back to the opener on close.
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const opener = document.activeElement;
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+
+    function onKeyDown(event) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = overflow;
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const total = getCartTotal(cart);
@@ -30,28 +55,40 @@ export default function CartDrawer({
   const orderMessage = buildCartWhatsAppMessage(cart, note, language, t);
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 p-2 sm:p-3" role="dialog" aria-modal="true" aria-label={t.yourOrder}>
-      <div className="flex max-h-[min(88vh,680px)] w-[min(520px,100%)] flex-col overflow-hidden rounded-t-[20px] border border-primary/15 bg-cream-soft shadow-2xl sm:rounded-[22px]">
-        <div className="flex items-start justify-between gap-3 border-b border-primary/15 p-3 sm:p-4">
-          <div>
-            <span className="w-fit rounded-full bg-gold/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-primary sm:py-1 sm:text-[11px]">{t.cart}</span>
-            <h2 className="m-0 mt-1.5 text-xl font-black leading-none text-primary sm:text-2xl">{t.yourOrder}</h2>
-          </div>
-          <button className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-primary/15 bg-white text-primary" type="button" onClick={onClose} aria-label="Close">
-            <IoClose className="h-4 w-4" aria-hidden="true" />
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+      <div className="absolute inset-0 bg-charcoal/50" onClick={onClose} aria-hidden="true" />
+
+      <div
+        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-2xl bg-cream-soft shadow-2xl sm:rounded-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cart-title"
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-primary/10 px-5 py-4">
+          <h2 id="cart-title" className="m-0 text-xl font-extrabold tracking-tight text-primary">
+            {t.yourOrder}
+          </h2>
+          <button
+            ref={closeRef}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-primary hover:bg-primary/10"
+            type="button"
+            onClick={onClose}
+            aria-label={t.close}
+          >
+            <IoClose className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {cart.length === 0 ? (
-          <div className="grid gap-3 p-4 text-center text-muted sm:p-5">
+          <div className="grid justify-items-center gap-4 px-5 py-10 text-center text-muted">
             <p className="m-0">{t.cartEmpty}</p>
-            <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary" type="button" onClick={onClose}>
+            <Button variant="secondary" onClick={onClose}>
               {t.continueBrowsing}
-            </button>
+            </Button>
           </div>
         ) : (
           <>
-            <div className="grid flex-1 gap-2 overflow-auto px-3 py-2.5 sm:px-4 sm:py-3">
+            <ul className="m-0 flex-1 list-none divide-y divide-primary/10 overflow-y-auto overscroll-contain px-5 py-1">
               {cart.map((entry) => (
                 <CartItem
                   key={entry.item.id}
@@ -63,32 +100,39 @@ export default function CartDrawer({
                   onRemove={onRemove}
                 />
               ))}
-            </div>
+            </ul>
 
-            {canShowTotal ? (
-              <div className="flex items-center justify-between gap-3 border-t border-primary/15 px-3 pt-2.5 font-black text-primary sm:px-4">
-                <span>{t.total}</span>
-                <strong className="text-orange">{formatPrice(total)}</strong>
+            <div className="grid gap-3 border-t border-primary/10 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
+              {canShowTotal ? (
+                <div className="flex items-center justify-between gap-3 text-base font-bold text-charcoal">
+                  <span>{t.total}</span>
+                  <span className="tabular-nums text-orange">{formatPrice(total)}</span>
+                </div>
+              ) : null}
+
+              <div className="grid gap-1.5">
+                <label htmlFor="cart-note" className="text-sm font-bold text-primary">
+                  {t.customerNote}
+                </label>
+                <textarea
+                  id="cart-note"
+                  className="w-full resize-none rounded-xl border border-primary/20 bg-white px-3 py-2 text-base text-charcoal placeholder:text-muted"
+                  value={note}
+                  onChange={(e) => onNoteChange(e.target.value)}
+                  placeholder={t.notePlaceholder}
+                  rows={2}
+                />
               </div>
-            ) : null}
 
-            <label className="grid gap-1.5 px-3 py-2.5 text-[13px] font-black text-primary sm:px-4">
-              <span>{t.customerNote}</span>
-              <textarea
-                className="w-full resize-y rounded-2xl border border-primary/15 bg-white px-3 py-2 font-normal text-charcoal"
-                value={note}
-                onChange={(e) => onNoteChange(e.target.value)}
-                placeholder={t.notePlaceholder}
-                rows={2}
-              />
-            </label>
-
-            <div className="grid gap-2 px-3 pb-3 sm:px-4 sm:pb-4">
-              <Button href={getWhatsAppUrl(orderMessage)} target="_blank" rel="noreferrer">
-                <FaWhatsapp className="me-1.5 h-4 w-4 flex-none" aria-hidden="true" />
+              <Button href={getWhatsAppUrl(orderMessage)} target="_blank" rel="noreferrer" className="min-h-12 text-base">
+                <FaWhatsapp className="h-5 w-5 flex-none" aria-hidden="true" />
                 {t.orderOnWhatsApp}
               </Button>
-              <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary" type="button" onClick={onClear}>
+              <button
+                className="min-h-10 text-sm font-bold text-muted hover:text-red-700"
+                type="button"
+                onClick={onClear}
+              >
                 {t.clearCart}
               </button>
             </div>

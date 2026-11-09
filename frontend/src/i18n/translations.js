@@ -33,6 +33,13 @@ export const translations = {
     freshDaily: "Fresh Daily",
     maps: "Maps",
     noteLabel: "Note:",
+    close: "Close",
+    increase: "Add one",
+    decrease: "Remove one",
+    retry: "Try again",
+    viewOrder: "View order",
+    itemsCount: "items",
+    inCart: "in cart",
   },
   ar: {
     whatsapp: "واتساب",
@@ -68,6 +75,13 @@ export const translations = {
     freshDaily: "طازج يوميًا",
     maps: "الخريطة",
     noteLabel: "ملاحظة:",
+    close: "إغلاق",
+    increase: "زيادة واحد",
+    decrease: "إنقاص واحد",
+    retry: "حاول مرة أخرى",
+    viewOrder: "عرض الطلب",
+    itemsCount: "أصناف",
+    inCart: "في السلة",
   },
 };
 

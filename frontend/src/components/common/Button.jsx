@@ -1,3 +1,15 @@
+// Shape rule for the public menu: buttons are full pills, surfaces are rounded-2xl.
+const BASE =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-bold no-underline transition-[transform,background-color,color] duration-150 active:scale-[0.98]";
+
+const VARIANTS = {
+  primary: "bg-primary text-white hover:bg-teal",
+  secondary: "border border-primary/20 bg-white text-primary hover:border-primary/40",
+  // For use on the dark green surface.
+  inverse: "bg-white text-primary hover:bg-cream",
+  inverseOutline: "border border-white/40 text-white hover:bg-white/10",
+};
+
 export default function Button({
   href,
   children,
@@ -5,13 +17,7 @@ export default function Button({
   className = "",
   ...props
 }) {
-  const base =
-    "inline-flex min-h-[42px] items-center justify-center rounded-full px-4 py-2.5 text-sm font-black no-underline transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
-  const styles =
-    variant === "secondary"
-      ? "border border-primary/15 bg-white text-primary hover:text-orange"
-      : "bg-gradient-to-br from-primary to-teal text-white shadow-soft hover:from-teal hover:to-leaf";
-  const classes = `${base} ${styles} ${className}`.trim();
+  const classes = `${BASE} ${VARIANTS[variant] || VARIANTS.primary} ${className}`.trim();
 
   if (href) {
     return (
