@@ -14,7 +14,8 @@ export const restaurantConfig = {
     ar: "شاورما طازجة وطلبات سريعة.",
   },
   contact: {
-    whatsappNumber: "78771076",
+    // International format, digits only (961 = Lebanon). wa.me requires the country code.
+    whatsappNumber: "96178771076",
     instagramUrl: "https://instagram.com/shawarma.story1/",
     googleMapsUrl: "https://maps.app.goo.gl/Ju8rKTrz2VZzXj2P7?g_st=aw",
   },

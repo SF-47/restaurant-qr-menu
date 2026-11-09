@@ -5,7 +5,9 @@ export function getWhatsAppUrl(
   message = `Hello ${restaurantConfig.name.en}, I would like to order.`,
   number = WHATSAPP_NUMBER,
 ) {
-  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+  // wa.me only accepts digits (no "+", spaces or dashes).
+  const digits = String(number).replace(/\D/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
 
 export function getItemOrderMessage(itemName) {

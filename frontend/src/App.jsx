@@ -1,6 +1,9 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PublicMenuPage from "./pages/PublicMenuPage";
-import AdminMenuPage from "./pages/AdminMenuPage";
+
+// Lazy-loaded so customers never download the admin UI or Firebase Auth.
+const AdminMenuPage = lazy(() => import("./pages/AdminMenuPage"));
 
 const ADMIN_PATH = "/6975fc7b-e74c-8330-b6f1-8fe2f9b3d526";
 
@@ -9,7 +12,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<PublicMenuPage />} />
-        <Route path={ADMIN_PATH} element={<AdminMenuPage />} />
+        <Route
+          path={ADMIN_PATH}
+          element={
+            <Suspense fallback={null}>
+              <AdminMenuPage />
+            </Suspense>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

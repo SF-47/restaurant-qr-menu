@@ -1,6 +1,8 @@
 import { formatPrice, getItemName, getPrice } from "./menuUtils";
 import restaurantConfig from "../config/restaurantConfig";
 
+export { syncCartWithMenu } from "./cartSync";
+
 const CART_STORAGE_KEY = `${restaurantConfig.storageKeyPrefix}-cart`;
 
 export function getStoredCart() {
@@ -16,7 +18,11 @@ export function getStoredCart() {
 
 export function storeCart(cart) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  try {
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  } catch {
+    // Non-critical: cart just won't survive a reload.
+  }
 }
 
 export function addItemToCart(cart, item) {
