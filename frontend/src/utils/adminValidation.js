@@ -1,7 +1,7 @@
 // Kept dependency-free so it can be unit tested with `node --test`.
 // Error/warning values are translation keys (see i18n/adminTranslations.js).
 
-const ARABIC_LETTERS = /[؀-ۿݐ-ݿࢠ-ࣿ]/;
+const ARABIC_LETTERS = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
 const LOW_PRICE = 1000; // Prices are full LBP amounts, e.g. 450,000.
 
 function text(value, lang) {

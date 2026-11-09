@@ -11,18 +11,21 @@ export default function AdminItemCard({ item, language, onEdit, onDelete, onTogg
   const price = toNum(item.price, 0);
   const available = item.available !== false;
   const flagged = needsFixing(item);
+  // Align with the page even when the text is in the other language.
+  const align = { textAlign: language === "ar" ? "right" : "left" };
 
   return (
     <article className={`${surface} grid gap-3 p-4 ${available ? "" : "bg-white/60"}`}>
       <div className="flex items-start justify-between gap-3">
-        <div className="grid min-w-0 gap-0.5">
+        <div className="grid min-w-0 flex-1 gap-0.5">
           <h3
             className={`m-0 break-words text-base font-bold leading-snug ${nameEn ? "text-charcoal" : "text-muted"}`}
             dir="auto"
+            style={align}
           >
             {nameEn || t.englishNameMissing}
           </h3>
-          <p className="m-0 break-words text-sm text-muted" dir="auto">
+          <p className="m-0 break-words text-sm text-muted" dir="auto" style={align}>
             {nameAr || t.arabicNameMissing}
           </p>
         </div>

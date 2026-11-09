@@ -94,6 +94,8 @@ export const adminTranslations = {
     showOnlyProblems: "Only items that need fixing",
     more: "More",
     showing: (shown, total) => `Showing ${shown} of ${total}`,
+    demoTitle: "Demo mode.",
+    demoBody: "This is sample data, not the real menu. Try anything: changes stay in this tab and reset when you reload.",
   },
   ar: {
     menuManagement: "إدارة القائمة",
@@ -188,6 +190,8 @@ export const adminTranslations = {
     showOnlyProblems: "الأصناف التي تحتاج تعديل فقط",
     more: "المزيد",
     showing: (shown, total) => `عرض ${shown} من ${total}`,
+    demoTitle: "وضع تجريبي.",
+    demoBody: "هذه بيانات تجريبية وليست القائمة الحقيقية. جرّب ما تشاء: التغييرات تبقى في هذه الصفحة وتعود كما كانت عند إعادة التحميل.",
   },
 };
 
