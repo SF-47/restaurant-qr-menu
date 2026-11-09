@@ -40,6 +40,9 @@ export const translations = {
     viewOrder: "View order",
     itemsCount: "items",
     inCart: "in cart",
+    notFoundTitle: "Page not found",
+    notFoundBody: "This page doesn't exist. The menu is one tap away.",
+    backToMenu: "Back to the menu",
   },
   ar: {
     whatsapp: "واتساب",
@@ -82,6 +85,9 @@ export const translations = {
     viewOrder: "عرض الطلب",
     itemsCount: "أصناف",
     inCart: "في السلة",
+    notFoundTitle: "الصفحة غير موجودة",
+    notFoundBody: "هذه الصفحة غير موجودة. القائمة على بعد نقرة واحدة.",
+    backToMenu: "العودة إلى القائمة",
   },
 };
 
