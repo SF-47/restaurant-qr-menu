@@ -7,6 +7,7 @@ import {
   getDocs,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { ADMIN_EMPTY_DRAFT } from "../data/constants";
@@ -16,7 +17,9 @@ import AdminItemForm from "../components/admin/AdminItemForm";
 import AdminItemList from "../components/admin/AdminItemList";
 import AdminLogin from "../components/admin/AdminLogin";
 import AdminModal from "../components/admin/AdminModal";
+import { btn, field } from "../components/admin/adminUi";
 import { getAdminTranslations } from "../i18n/adminTranslations";
+import { needsFixing, validateItemDraft } from "../utils/adminValidation";
 import {
   catKey,
   computeNextOrderFillGaps,
@@ -29,51 +32,75 @@ import {
 } from "../utils/categoryUtils";
 import { getDirection, getStoredLanguage, storeLanguage } from "../utils/languageUtils";
 
+const ARABIC = /[؀-ۿ]/;
+const BATCH_LIMIT = 450; // Firestore allows 500 writes per batch.
+
+// Older items store the description as a plain string; split it by script.
+function descriptionToDraft(value) {
+  if (!value) return { en: "", ar: "" };
+  if (typeof value === "string") return ARABIC.test(value) ? { en: "", ar: value } : { en: value, ar: "" };
+  return { en: value.en || "", ar: value.ar || "" };
+}
+
+// Applies `data` to every item in one or more atomic batches.
+async function updateItemsInBatches(items, data) {
+  for (let i = 0; i < items.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    items.slice(i, i + BATCH_LIMIT).forEach((item) => {
+      batch.update(doc(db, "menuItems", item.id), { ...data, updatedAt: serverTimestamp() });
+    });
+    await batch.commit();
+  }
+}
+
 export default function AdminMenuPage() {
   const [user, setUser] = useState(null);
   const [language, setLanguage] = useState(getStoredLanguage);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [catFilter, setCatFilter] = useState("All");
+  const [catFilter, setCatFilter] = useState("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
+  const [onlyProblems, setOnlyProblems] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showUnavailable, setShowUnavailable] = useState(true);
-  const [showOnlyUnavailable, setShowOnlyUnavailable] = useState(false);
   const [manageCatsOpen, setManageCatsOpen] = useState(false);
   const [editingCat, setEditingCat] = useState(null);
   const [addedCategories, setAddedCategories] = useState([]);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [newCategory, setNewCategory] = useState({ en: "", ar: "" });
+  const [newCategoryError, setNewCategoryError] = useState("");
   const [catEditEn, setCatEditEn] = useState("");
   const [catEditAr, setCatEditAr] = useState("");
   const [modal, setModal] = useState({ open: false, mode: "add" });
   const [draft, setDraft] = useState(ADMIN_EMPTY_DRAFT);
+  const [formErrors, setFormErrors] = useState({});
   const t = getAdminTranslations(language);
   const direction = getDirection(language);
 
   useEffect(() => {
     storeLanguage(language);
-  }, [language]);
+    document.documentElement.lang = language;
+    document.documentElement.dir = direction;
+  }, [language, direction]);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setErr("");
     try {
-      setErr("");
       const snap = await getDocs(collection(db, "menuItems"));
-      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setItems(data);
+      setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     } catch (e) {
       console.error(e);
-      setErr(t.couldNotLoad);
+      setErr("couldNotLoad");
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [t.couldNotLoad]);
+  }, []);
 
   useEffect(() => {
-    if (!user) return;
-    load();
+    if (user) load();
   }, [user, load]);
 
   const categories = useMemo(() => {
@@ -86,76 +113,67 @@ export default function AdminMenuPage() {
     return Array.from(map.values());
   }, [items, addedCategories]);
 
-  const stats = useMemo(
-    () => ({
-      total: items.length,
-      available: items.filter((item) => item.available !== false).length,
-      unavailable: items.filter((item) => item.available === false).length,
-      categories: categories.length,
-    }),
-    [items, categories.length],
-  );
+  const categoryCounts = useMemo(() => {
+    const counts = new Map();
+    items.forEach((item) => {
+      const key = catKey(normalizeCategory(item.category).en);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return counts;
+  }, [items]);
 
-  const filtered = useMemo(
-    () =>
-      sortMenuItems(
-        items
-          .filter((item) => {
-            if (showOnlyUnavailable) return item.available === false;
-            return showUnavailable ? true : item.available !== false;
-          })
-          .filter((item) => {
-            const catEn = normalizeCategory(item.category).en;
-            if (catFilter === "All") return true;
-            return catEn === catFilter;
-          })
-          .filter((item) => {
-            const query = searchTerm.trim().toLowerCase();
-            if (!query) return true;
+  const problemCount = useMemo(() => items.filter(needsFixing).length, [items]);
 
-            const category = normalizeCategory(item.category);
-            const values = [
-              getLangText(item.name, "en"),
-              getLangText(item.name, "ar"),
-              category.en,
-              category.ar,
-              String(item.price ?? ""),
-            ];
+  const filtered = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
 
-            return values.some((value) => String(value || "").toLowerCase().includes(query));
-          }),
-      ),
-    [items, catFilter, searchTerm, showUnavailable, showOnlyUnavailable],
-  );
+    return sortMenuItems(
+      items.filter((item) => {
+        const available = item.available !== false;
+        if (availabilityFilter === "available" && !available) return false;
+        if (availabilityFilter === "unavailable" && available) return false;
+
+        const category = normalizeCategory(item.category);
+        if (catFilter !== "all" && catKey(category.en) !== catFilter) return false;
+        if (onlyProblems && !needsFixing(item)) return false;
+        if (!query) return true;
+
+        return [
+          getLangText(item.name, "en"),
+          getLangText(item.name, "ar"),
+          category.en,
+          category.ar,
+          String(item.price ?? ""),
+        ].some((value) => String(value || "").toLowerCase().includes(query));
+      }),
+    );
+  }, [items, catFilter, availabilityFilter, onlyProblems, searchTerm]);
 
   function openAdd() {
-    const defaultCat = categories[0]?.en || "";
-    const next = computeNextOrderFillGaps(items);
-
+    const first = catFilter !== "all" ? categories.find((c) => catKey(c.en) === catFilter) : categories[0];
     setDraft({
       ...ADMIN_EMPTY_DRAFT,
-      category: {
-        en: defaultCat,
-        ar: categories.find((category) => category.en === defaultCat)?.ar || "",
-      },
+      category: { en: first?.en || "", ar: first?.ar || "" },
+      description: { en: "", ar: "" },
       price: "",
-      order: next,
-      available: true,
+      order: computeNextOrderFillGaps(items),
     });
-
+    setFormErrors({});
     setModal({ open: true, mode: "add" });
   }
 
   function openEdit(item) {
-    const cat = normalizeCategory(item.category);
     setDraft({
       id: item.id,
       name: normalizeTextObj(item.name),
-      category: cat,
+      category: normalizeCategory(item.category),
+      description: descriptionToDraft(item.description),
       price: toNum(item.price, 0),
       order: toNum(item.order, 1),
       available: item.available !== false,
     });
+    // Show stored problems (e.g. Arabic in the English field) straight away.
+    setFormErrors(validateItemDraft({ ...item, name: normalizeTextObj(item.name) }).errors);
     setModal({ open: true, mode: "edit" });
   }
 
@@ -165,8 +183,10 @@ export default function AdminMenuPage() {
   }
 
   function closeModal() {
+    if (busy) return;
     setModal({ open: false, mode: "add" });
     setDraft(ADMIN_EMPTY_DRAFT);
+    setFormErrors({});
   }
 
   function setField(path, value) {
@@ -181,73 +201,26 @@ export default function AdminMenuPage() {
       cur[parts[parts.length - 1]] = value;
       return copy;
     });
-  }
-
-  async function renameCategory(oldEn, newObj) {
-    if (!oldEn || !newObj) return;
-    try {
-      setLoading(true);
-      const keyOld = catKey(oldEn);
-      const updates = items
-        .filter((item) => catKey(normalizeCategory(item.category).en) === keyOld)
-        .map((item) =>
-          updateDoc(doc(db, "menuItems", item.id), {
-            category: { en: newObj.en, ar: newObj.ar || "" },
-            updatedAt: serverTimestamp(),
-          }),
-        );
-
-      for (const p of updates) await p;
-      await load();
-    } catch (e) {
-      console.error(e);
-      alert(t.renameCategoryFailed);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function deleteCategoryByName(enName) {
-    if (!enName) return;
-    if (
-      !confirm(
-        t.deleteCategoryConfirm(enName),
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const keyOld = catKey(enName);
-      const updates = items
-        .filter((item) => catKey(normalizeCategory(item.category).en) === keyOld)
-        .map((item) =>
-          updateDoc(doc(db, "menuItems", item.id), {
-            category: { en: "", ar: "" },
-            updatedAt: serverTimestamp(),
-          }),
-        );
-
-      for (const p of updates) await p;
-      await load();
-    } catch (e) {
-      console.error(e);
-      alert(t.deleteCategoryFailed);
-    } finally {
-      setLoading(false);
-    }
+    // Clear the error for the field being edited.
+    const key = { "name.en": "nameEn", "name.ar": "nameAr", category: "category", price: "price" }[path];
+    if (key) setFormErrors((current) => ({ ...current, [key]: undefined }));
   }
 
   async function save() {
+    if (busy) return;
+
+    const { errors, warnings } = validateItemDraft(draft);
+    const hasErrors = Object.values(errors).some(Boolean);
+    setFormErrors(errors);
+    if (hasErrors) return;
+    if (warnings.price && !confirm(t.priceLooksLow(Number(draft.price).toLocaleString("en-US")))) return;
+
     const payload = {
-      name: {
-        en: (draft.name.en || "").trim(),
-        ar: (draft.name.ar || "").trim(),
-      },
-      category: {
-        en: (draft.category?.en || "").trim(),
-        ar: (draft.category?.ar || "").trim(),
+      name: { en: draft.name.en.trim(), ar: draft.name.ar.trim() },
+      category: { en: draft.category.en.trim(), ar: (draft.category.ar || "").trim() },
+      description: {
+        en: (draft.description?.en || "").trim(),
+        ar: (draft.description?.ar || "").trim(),
       },
       price: toNum(draft.price, 0),
       order: toNum(draft.order, 1),
@@ -255,116 +228,119 @@ export default function AdminMenuPage() {
       updatedAt: serverTimestamp(),
     };
 
-    if (!payload.name.en) {
-      alert(t.nameEnRequired);
-      return;
-    }
-    if (!payload.category.en) {
-      alert(t.categoryEnRequired);
-      return;
-    }
-
+    setBusy(true);
     try {
       if (modal.mode === "add") {
-        await addDoc(collection(db, "menuItems"), {
-          ...payload,
-          createdAt: serverTimestamp(),
-        });
+        await addDoc(collection(db, "menuItems"), { ...payload, createdAt: serverTimestamp() });
       } else if (modal.mode === "edit" && draft.id) {
         await updateDoc(doc(db, "menuItems", draft.id), payload);
       }
-      await load();
+      setBusy(false);
       closeModal();
+      await load();
     } catch (e) {
       console.error(e);
       alert(t.saveFailed);
+      setBusy(false);
     }
   }
 
   async function remove() {
-    const id = draft?.id;
-    if (!id) {
-      alert(t.noItemSelected);
-      return;
-    }
-
+    if (busy || !draft?.id) return;
+    setBusy(true);
     try {
-      setLoading(true);
-      await deleteDoc(doc(db, "menuItems", String(id)));
-      await load();
+      await deleteDoc(doc(db, "menuItems", String(draft.id)));
+      setItems((current) => current.filter((item) => item.id !== draft.id));
+      setBusy(false);
       closeModal();
     } catch (e) {
       console.error(e);
       alert(`${t.deleteFailed} ${e?.message || ""}`);
-    } finally {
-      setLoading(false);
+      setBusy(false);
     }
   }
 
   async function toggleAvailability(item) {
     if (!item?.id) return;
     const nextAvailable = item.available === false;
+    // Optimistic update; rolled back if Firestore rejects it.
+    const setAvailable = (value) =>
+      setItems((current) => current.map((c) => (c.id === item.id ? { ...c, available: value } : c)));
 
+    setAvailable(nextAvailable);
     try {
       await updateDoc(doc(db, "menuItems", item.id), {
         available: nextAvailable,
         updatedAt: serverTimestamp(),
       });
-      setItems((current) =>
-        current.map((currentItem) =>
-          currentItem.id === item.id ? { ...currentItem, available: nextAvailable } : currentItem,
-        ),
-      );
     } catch (e) {
       console.error(e);
+      setAvailable(!nextAvailable);
       alert(t.updateAvailabilityFailed);
     }
   }
 
-  function closeCategoryManager() {
-    setManageCatsOpen(false);
-    setEditingCat(null);
+  function itemsInCategory(enName) {
+    const key = catKey(enName);
+    return items.filter((item) => catKey(normalizeCategory(item.category).en) === key);
+  }
+
+  async function renameCategory() {
+    const en = catEditEn.trim();
+    if (!editingCat || !en || busy) return;
+    setBusy(true);
+    try {
+      await updateItemsInBatches(itemsInCategory(editingCat.en), {
+        category: { en, ar: catEditAr.trim() },
+      });
+      setEditingCat(null);
+      await load();
+    } catch (e) {
+      console.error(e);
+      alert(t.renameCategoryFailed);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteCategoryByName(enName) {
+    if (!enName || busy || !confirm(t.deleteCategoryConfirm(enName))) return;
+    setBusy(true);
+    try {
+      await updateItemsInBatches(itemsInCategory(enName), { category: { en: "", ar: "" } });
+      setAddedCategories((current) => current.filter((c) => catKey(c.en) !== catKey(enName)));
+      await load();
+    } catch (e) {
+      console.error(e);
+      alert(t.deleteCategoryFailed);
+    } finally {
+      setBusy(false);
+    }
   }
 
   function closeAddCategory() {
     setAddCategoryOpen(false);
     setNewCategory({ en: "", ar: "" });
+    setNewCategoryError("");
   }
 
   function saveAddedCategory() {
     const en = newCategory.en.trim();
     const ar = newCategory.ar.trim();
     if (!en) {
-      alert(t.categoryEnRequired);
+      setNewCategoryError(t.categoryEnRequired);
       return;
     }
-
-    setAddedCategories((current) => {
-      if (current.some((category) => catKey(category.en) === catKey(en))) return current;
-      if (makeCategoriesFromItems(items).some((category) => catKey(category.en) === catKey(en))) return current;
-      return [...current, { key: catKey(en), en, ar }];
-    });
+    if (!categories.some((c) => catKey(c.en) === catKey(en))) {
+      setAddedCategories((current) => [...current, { key: catKey(en), en, ar }]);
+    }
     closeAddCategory();
   }
 
   return (
-    <AdminLogin
-      onUserChange={setUser}
-      t={t}
-      language={language}
-      onLanguageChange={setLanguage}
-    >
+    <AdminLogin onUserChange={setUser} t={t} language={language} onLanguageChange={setLanguage}>
       {({ goToMenu, logout, authError }) => (
-        <div
-          className="min-h-screen bg-cream p-2.5 text-charcoal [background:radial-gradient(circle_at_top_left,rgba(246,170,45,0.18),transparent_22rem),linear-gradient(180deg,#fff7e8,#fffdf8_34rem,#fffaf0)] sm:p-3.5"
-          dir={direction}
-          lang={language}
-        >
-          {authError ? (
-            <div className="mx-auto mb-3 w-full max-w-[1180px] rounded-2xl border border-red-700/20 bg-red-50 p-4 text-center font-extrabold text-red-700">
-              {authError}
-            </div>
-          ) : null}
+        <div className="min-h-dvh pb-10 text-charcoal" dir={direction} lang={language}>
           <AdminHeader
             onAdd={openAdd}
             onAddCategory={() => setAddCategoryOpen(true)}
@@ -373,67 +349,103 @@ export default function AdminMenuPage() {
             onGoToMenu={goToMenu}
             onLogout={logout}
             loading={loading}
-            stats={stats}
             t={t}
             language={language}
             onLanguageChange={setLanguage}
           />
 
-          <div className="mx-auto mb-3 grid w-full max-w-[1180px] gap-2.5 rounded-[18px] border border-primary/15 bg-white/90 p-3 shadow-card md:grid-cols-[minmax(220px,1fr)_minmax(240px,1.2fr)_auto_auto] md:items-end">
-            <label className="grid gap-1.5">
-              <span className="text-xs font-black text-muted">{t.category}</span>
-              <select
-                className="min-h-10 w-full rounded-xl border border-primary/15 bg-white px-3 py-2 text-sm text-charcoal shadow-sm outline-none focus:border-orange focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
-                value={catFilter}
-                onChange={(e) => setCatFilter(e.target.value)}
-              >
-                <option value="All">{t.allCategories}</option>
-                {categories.map((category) => (
-                  <option key={category.en} value={category.en}>
-                    {language === "ar" && category.ar ? category.ar : category.en}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <main className="mx-auto grid max-w-6xl gap-4 px-4 pt-4">
+            {authError ? (
+              <p className="m-0 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700" role="alert">
+                {authError}
+              </p>
+            ) : null}
 
-            <label className="grid gap-1.5">
-              <span className="text-xs font-black text-muted">{t.search}</span>
-              <input
-                className="min-h-10 w-full rounded-xl border border-primary/15 bg-white px-3 py-2 text-sm text-charcoal shadow-sm outline-none focus:border-orange focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
-                type="search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t.searchPlaceholder}
-              />
-            </label>
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+              <div className={field.wrap}>
+                <label htmlFor="admin-search" className="sr-only">{t.search}</label>
+                <input
+                  id="admin-search"
+                  className={field.input}
+                  type="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={t.searchPlaceholder}
+                />
+              </div>
+              <div className={field.wrap}>
+                <label htmlFor="admin-category" className="sr-only">{t.category}</label>
+                <select
+                  id="admin-category"
+                  className={field.input}
+                  value={catFilter}
+                  onChange={(e) => setCatFilter(e.target.value)}
+                >
+                  <option value="all">{t.allCategories}</option>
+                  {categories.map((category) => (
+                    <option key={catKey(category.en)} value={catKey(category.en)}>
+                      {language === "ar" && category.ar ? category.ar : category.en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={field.wrap}>
+                <label htmlFor="admin-availability" className="sr-only">{t.available}</label>
+                <select
+                  id="admin-availability"
+                  className={field.input}
+                  value={availabilityFilter}
+                  onChange={(e) => setAvailabilityFilter(e.target.value)}
+                >
+                  <option value="all">{`${t.available} + ${t.unavailable}`}</option>
+                  <option value="available">{t.available}</option>
+                  <option value="unavailable">{t.unavailable}</option>
+                </select>
+              </div>
+            </div>
 
-            <label className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-primary/15 bg-white px-3 py-2 text-[13px] font-black text-primary">
-              <input
-                className="h-4 w-4 accent-primary"
-                type="checkbox"
-                checked={showUnavailable}
-                onChange={(e) => setShowUnavailable(e.target.checked)}
-              />
-              {t.showUnavailable}
-            </label>
-            <label className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-primary/15 bg-white px-3 py-2 text-[13px] font-black text-primary">
-              <input
-                className="h-4 w-4 accent-primary"
-                type="checkbox"
-                checked={showOnlyUnavailable}
-                onChange={(e) => setShowOnlyUnavailable(e.target.checked)}
-              />
-              {t.showOnlyUnavailable}
-            </label>
-          </div>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
+              <p className="m-0 tabular-nums text-muted" aria-live="polite">
+                {t.showing(filtered.length, items.length)}
+              </p>
+              {problemCount > 0 || onlyProblems ? (
+                <label className="inline-flex min-h-9 items-center gap-2 font-bold text-orange">
+                  <input
+                    className={field.checkbox}
+                    type="checkbox"
+                    checked={onlyProblems}
+                    onChange={(e) => setOnlyProblems(e.target.checked)}
+                  />
+                  {t.showOnlyProblems} ({problemCount})
+                </label>
+              ) : null}
+            </div>
+
+            <AdminItemList
+              items={filtered}
+              loading={loading}
+              error={err ? t[err] : ""}
+              language={language}
+              onEdit={openEdit}
+              onDelete={openDelete}
+              onToggleAvailable={toggleAvailability}
+              onRetry={load}
+              t={t}
+            />
+          </main>
 
           <AdminCategoryManager
             open={manageCatsOpen}
             categories={categories}
+            counts={categoryCounts}
             editingCat={editingCat}
             catEditEn={catEditEn}
             catEditAr={catEditAr}
-            onClose={closeCategoryManager}
+            busy={busy}
+            onClose={() => {
+              setManageCatsOpen(false);
+              setEditingCat(null);
+            }}
             onStartEdit={(category) => {
               setEditingCat(category);
               setCatEditEn(category.en);
@@ -442,83 +454,95 @@ export default function AdminMenuPage() {
             onCancelEdit={() => setEditingCat(null)}
             onChangeEn={setCatEditEn}
             onChangeAr={setCatEditAr}
-            onRename={async () => {
-              await renameCategory(editingCat.en, { en: catEditEn, ar: catEditAr });
-              setEditingCat(null);
-            }}
+            onRename={renameCategory}
             onDelete={deleteCategoryByName}
             t={t}
           />
 
-          <AdminModal open={addCategoryOpen} title={t.addCategoryTitle} onClose={closeAddCategory} closeLabel={t.close}>
-            <div className="grid gap-2.5">
-              <label className="grid gap-1">
-                <span className="text-[11px] font-black text-muted">{t.categoryEn}</span>
+          <AdminModal
+            open={addCategoryOpen}
+            title={t.addCategoryTitle}
+            onClose={closeAddCategory}
+            onSubmit={saveAddedCategory}
+            closeLabel={t.close}
+            footer={
+              <>
+                <button className={btn.secondary} type="button" onClick={closeAddCategory}>
+                  {t.cancel}
+                </button>
+                <button className={btn.primary} type="submit">
+                  {t.saveCategory}
+                </button>
+              </>
+            }
+          >
+            <div className="grid gap-4">
+              <div className={field.wrap}>
+                <label htmlFor="new-cat-en" className={field.label}>{t.categoryEn}</label>
                 <input
-                  className="min-h-9 w-full rounded-xl border border-primary/15 bg-white px-2.5 py-1.5 text-[13px] text-charcoal shadow-sm outline-none focus:border-orange focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
+                  id="new-cat-en"
+                  className={field.input}
+                  dir="ltr"
                   value={newCategory.en}
-                  onChange={(e) => setNewCategory((current) => ({ ...current, en: e.target.value }))}
+                  aria-invalid={newCategoryError ? true : undefined}
+                  onChange={(e) => {
+                    setNewCategory((current) => ({ ...current, en: e.target.value }));
+                    setNewCategoryError("");
+                  }}
                   placeholder={t.categoryExample}
                 />
-              </label>
-              <label className="grid gap-1">
-                <span className="text-[11px] font-black text-muted">{t.categoryAr}</span>
+                {newCategoryError ? <p className={`m-0 ${field.error}`}>{newCategoryError}</p> : null}
+              </div>
+              <div className={field.wrap}>
+                <label htmlFor="new-cat-ar" className={field.label}>{t.categoryAr}</label>
                 <input
-                  className="min-h-9 w-full rounded-xl border border-primary/15 bg-white px-2.5 py-1.5 text-[13px] text-charcoal shadow-sm outline-none focus:border-orange focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
+                  id="new-cat-ar"
+                  className={field.input}
+                  dir="rtl"
                   value={newCategory.ar}
                   onChange={(e) => setNewCategory((current) => ({ ...current, ar: e.target.value }))}
                   placeholder={t.categoryArabicName}
-                  dir="rtl"
                 />
-              </label>
-              <p className="m-0 rounded-2xl border border-primary/15 bg-cream-soft p-3 text-xs font-extrabold text-muted">
-                {t.categoryHelp}
-              </p>
-            </div>
-            <div className="sticky bottom-[-10px] z-10 -mx-2.5 -mb-2.5 mt-2.5 flex flex-wrap justify-end gap-2 border-t border-primary/10 bg-gradient-to-b from-white/90 to-white px-2.5 py-2.5 sm:-mx-3 sm:-mb-3 sm:px-3">
-              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={closeAddCategory}>
-                {t.cancel}
-              </button>
-              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={saveAddedCategory}>
-                {t.saveCategory}
-              </button>
+              </div>
+              <p className={`m-0 ${field.hint}`}>{t.categoryHelp}</p>
             </div>
           </AdminModal>
-
-          <AdminItemList
-            items={filtered}
-            loading={loading}
-            error={err}
-            onEdit={openEdit}
-            onDelete={openDelete}
-            onToggleAvailable={toggleAvailability}
-            t={t}
-          />
 
           <AdminItemForm
             open={modal.open}
             mode={modal.mode}
             draft={draft}
             categories={categories}
+            errors={formErrors}
+            saving={busy}
             onClose={closeModal}
             onSave={save}
-            setDraft={setDraft}
             setField={setField}
             t={t}
           />
 
-          <AdminModal open={modal.open && modal.mode === "delete"} title={t.deleteItemTitle} onClose={closeModal} closeLabel={t.close}>
-            <p className="m-0 rounded-2xl border border-red-700/20 bg-red-50 p-3 text-red-700">
-              {t.deleteItemCopy} <b>{getLangText(draft.name, language) || getLangText(draft.name, "en") || t.unknownItem}</b>
+          <AdminModal
+            open={modal.open && modal.mode === "delete"}
+            title={t.deleteItemTitle}
+            onClose={closeModal}
+            closeLabel={t.close}
+            footer={
+              <>
+                <button className={btn.secondary} type="button" onClick={closeModal}>
+                  {t.cancel}
+                </button>
+                <button className={btn.danger} type="button" onClick={remove} disabled={busy}>
+                  {busy ? t.deleting : t.delete}
+                </button>
+              </>
+            }
+          >
+            <p className="m-0 text-charcoal">
+              {t.deleteItemCopy}{" "}
+              <strong dir="auto">
+                {getLangText(draft.name, language) || getLangText(draft.name, "en") || t.unknownItem}
+              </strong>
             </p>
-            <div className="sticky bottom-[-10px] z-10 -mx-2.5 -mb-2.5 mt-2.5 flex flex-wrap justify-end gap-2 border-t border-primary/10 bg-gradient-to-b from-white/90 to-white px-2.5 py-2.5 sm:-mx-3 sm:-mb-3 sm:px-3">
-              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange" type="button" onClick={closeModal}>
-                {t.cancel}
-              </button>
-              <button className="inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-red-700 to-red-900 px-4 py-2 text-sm font-black text-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={remove} disabled={loading}>
-                {loading ? t.deleting : t.delete}
-              </button>
-            </div>
           </AdminModal>
         </div>
       )}

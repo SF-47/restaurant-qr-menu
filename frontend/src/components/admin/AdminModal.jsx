@@ -1,39 +1,100 @@
+import { useEffect, useId, useRef } from "react";
+import { IoClose } from "react-icons/io5";
+
+/**
+ * Dialog shell. Pass `onSubmit` to render the body as a <form>, so Enter submits.
+ * `footer` is rendered in a fixed bar below the scrollable body.
+ */
 export default function AdminModal({
   open,
   title,
   children,
+  footer,
   onClose,
-  headerExtra,
-  headerRight,
+  onSubmit,
   closeLabel = "Close",
+  size = "md",
 }) {
+  const titleId = useId();
+  const panelRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  // Focus the first field (or the panel), close on Escape, lock page scroll,
+  // and return focus to whatever opened the dialog.
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const opener = document.activeElement;
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+
+    const first = panelRef.current?.querySelector("input, select, textarea");
+    (first || panelRef.current)?.focus();
+
+    function onKeyDown(event) {
+      if (event.key === "Escape") onCloseRef.current?.();
+    }
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = overflow;
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, [open]);
+
   if (!open) return null;
 
+  const Body = onSubmit ? "form" : "div";
+  const bodyProps = onSubmit
+    ? {
+        noValidate: true,
+        onSubmit: (event) => {
+          event.preventDefault();
+          onSubmit();
+        },
+      }
+    : {};
+
   return (
-    <div
-      className="fixed inset-0 z-[999] grid place-items-center bg-[#061613]/70 p-0 backdrop-blur-sm sm:p-4"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="flex max-h-[90vh] w-[94vw] max-w-[760px] flex-col overflow-hidden rounded-2xl border border-primary/15 bg-white/90 shadow-2xl">
-        <div className="flex flex-none items-center gap-2 border-b border-primary/10 bg-cream-soft px-3 py-2.5">
-          <div className="flex min-w-0 items-center gap-2">
-            <h3 className="m-0 text-base font-black leading-tight text-primary">{title}</h3>
-            {headerExtra}
-          </div>
-          {headerRight ? <div className="ms-auto">{headerRight}</div> : null}
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+      <div className="absolute inset-0 bg-charcoal/50" onClick={onClose} aria-hidden="true" />
+
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className={`relative flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-cream-soft shadow-2xl outline-none sm:rounded-2xl ${
+          size === "lg" ? "sm:max-w-2xl" : "sm:max-w-lg"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <div className="flex flex-none items-center justify-between gap-3 border-b border-primary/10 px-5 py-3">
+          <h2 id={titleId} className="m-0 text-lg font-extrabold tracking-tight text-primary">
+            {title}
+          </h2>
           <button
-            className="ms-auto inline-flex h-7 w-7 flex-none items-center justify-center rounded-full border border-primary/15 bg-white text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange"
+            className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-full text-primary hover:bg-primary/10"
             onClick={onClose}
             type="button"
             aria-label={closeLabel}
           >
-            x
+            <IoClose className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto overscroll-contain p-2.5 [-webkit-overflow-scrolling:touch] sm:p-3">
-          {children}
-        </div>
+
+        <Body className="flex min-h-0 flex-1 flex-col" {...bodyProps}>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">{children}</div>
+          {footer ? (
+            <div className="flex flex-none flex-wrap justify-end gap-2 border-t border-primary/10 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              {footer}
+            </div>
+          ) : null}
+        </Body>
       </div>
     </div>
   );

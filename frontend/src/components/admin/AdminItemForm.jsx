@@ -1,15 +1,7 @@
-import AdminCategoryCombo from "./AdminCategoryCombo";
+import { useId } from "react";
 import AdminModal from "./AdminModal";
-
-const fieldClass = "grid gap-1";
-const labelClass = "text-[11px] font-black text-muted";
-const inputClass =
-  "min-h-9 w-full rounded-xl border border-primary/15 bg-white px-2.5 py-1.5 text-[13px] text-charcoal shadow-sm outline-none focus:border-orange focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
-const numberInputClass = `${inputClass} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`;
-const primaryButton =
-  "inline-flex min-h-[38px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
-const ghostButton =
-  "inline-flex min-h-[38px] items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
+import { btn, field } from "./adminUi";
+import { catKey } from "../../utils/categoryUtils";
 
 function formatPriceInput(value) {
   if (value === "" || value == null) return "";
@@ -17,9 +9,34 @@ function formatPriceInput(value) {
   return digits ? Number(digits).toLocaleString("en-US") : "";
 }
 
-function parsePriceInput(value) {
+function parseDigits(value) {
   const digits = value.replace(/\D/g, "");
   return digits ? Number(digits) : "";
+}
+
+function Field({ label, hint, error, children, className = "" }) {
+  const id = useId();
+  return (
+    <div className={`${field.wrap} ${className}`}>
+      <label htmlFor={id} className={field.label}>
+        {label}
+      </label>
+      {children({
+        id,
+        "aria-invalid": error ? true : undefined,
+        "aria-describedby": error || hint ? `${id}-note` : undefined,
+      })}
+      {error ? (
+        <p id={`${id}-note`} className={`m-0 ${field.error}`}>
+          {error}
+        </p>
+      ) : hint ? (
+        <p id={`${id}-note`} className={`m-0 ${field.hint}`}>
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 export default function AdminItemForm({
@@ -27,99 +44,153 @@ export default function AdminItemForm({
   mode,
   draft,
   categories,
+  errors = {},
+  saving,
   onClose,
   onSave,
-  setDraft,
   setField,
   t,
 }) {
+  const err = (key) => (errors[key] ? t[errors[key]] : "");
+  const selectedKey = catKey(draft.category?.en);
+  const knownCategory = categories.some((c) => catKey(c.en) === selectedKey);
+
   return (
     <AdminModal
       open={open && (mode === "add" || mode === "edit")}
       title={mode === "add" ? t.addItemTitle : t.editItemTitle}
       onClose={onClose}
+      onSubmit={onSave}
       closeLabel={t.close}
+      size="lg"
+      footer={
+        <>
+          <button className={btn.secondary} type="button" onClick={onClose}>
+            {t.cancel}
+          </button>
+          <button className={btn.primary} type="submit" disabled={saving}>
+            {saving ? t.saving : t.save}
+          </button>
+        </>
+      }
     >
-      <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
-        <label className={fieldClass}>
-          <span className={labelClass}>{t.nameEn}</span>
-          <input
-            className={inputClass}
-            value={draft.name.en}
-            onChange={(e) => setField("name.en", e.target.value)}
-          />
-        </label>
-
-        <label className={fieldClass}>
-          <span className={labelClass}>{t.nameAr}</span>
-          <input
-            className={inputClass}
-            value={draft.name.ar}
-            onChange={(e) => setField("name.ar", e.target.value)}
-            dir="rtl"
-          />
-        </label>
-
-        <div className={fieldClass}>
-          <label className={labelClass}>{t.category}</label>
-          <AdminCategoryCombo
-            categories={categories}
-            value={draft.category || { en: "", ar: "" }}
-            onTypeEn={(v) => setField("category.en", v)}
-            onPickObj={(obj) => {
-              setField("category.en", obj.en);
-              setField("category.ar", obj.ar || "");
-            }}
-            t={t}
-          />
-        </div>
-
-        <label className={fieldClass}>
-          <span className={labelClass}>{t.categoryAr}</span>
-          <input
-            className={inputClass}
-            value={draft.category?.ar || ""}
-            onChange={(e) => setField("category.ar", e.target.value)}
-            dir="rtl"
-          />
-        </label>
-
-        <label className={fieldClass}>
-          <span className={labelClass}>{t.price}</span>
-          <input
-            className={numberInputClass}
-            type="text"
-            inputMode="numeric"
-            value={formatPriceInput(draft.price)}
-            onChange={(e) =>
-              setDraft((d) => ({
-                ...d,
-                price: parsePriceInput(e.target.value),
-              }))
-            }
-          />
-        </label>
-
-        <div className="sm:col-span-2">
-          <label className="inline-flex min-h-9 w-fit items-center gap-2 rounded-xl border border-primary/15 bg-white px-2.5 py-1.5 text-xs font-black text-primary">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={t.nameEn} error={err("nameEn")}>
+          {(props) => (
             <input
-              className="h-4 w-4 accent-primary"
-              type="checkbox"
-              checked={!!draft.available}
-              onChange={(e) => setDraft((d) => ({ ...d, available: e.target.checked }))}
+              {...props}
+              className={field.input}
+              dir="ltr"
+              lang="en"
+              value={draft.name.en}
+              onChange={(e) => setField("name.en", e.target.value)}
             />
-            {t.available}
-          </label>
-        </div>
-      </div>
+          )}
+        </Field>
 
-      <div className="sticky bottom-[-10px] z-10 -mx-2.5 -mb-2.5 mt-2.5 flex flex-wrap justify-end gap-2 border-t border-primary/10 bg-gradient-to-b from-white/90 to-white px-2.5 py-2.5 sm:-mx-3 sm:-mb-3 sm:px-3">
-        <button className={ghostButton} type="button" onClick={onClose}>
-          {t.cancel}
-        </button>
-        <button className={primaryButton} type="button" onClick={onSave}>
-          {t.save}
-        </button>
+        <Field label={t.nameAr} error={err("nameAr")}>
+          {(props) => (
+            <input
+              {...props}
+              className={field.input}
+              dir="rtl"
+              lang="ar"
+              value={draft.name.ar}
+              onChange={(e) => setField("name.ar", e.target.value)}
+            />
+          )}
+        </Field>
+
+        <Field label={t.category} error={err("category")}>
+          {(props) => (
+            <select
+              {...props}
+              className={field.input}
+              value={selectedKey}
+              onChange={(e) => {
+                const picked = categories.find((c) => catKey(c.en) === e.target.value);
+                setField("category", { en: picked?.en || "", ar: picked?.ar || "" });
+              }}
+            >
+              <option value="">{t.pickCategory}</option>
+              {!knownCategory && selectedKey ? (
+                <option value={selectedKey}>{draft.category.en}</option>
+              ) : null}
+              {categories.map((c) => (
+                <option key={catKey(c.en)} value={catKey(c.en)}>
+                  {c.ar ? `${c.en} / ${c.ar}` : c.en}
+                </option>
+              ))}
+            </select>
+          )}
+        </Field>
+
+        <Field label={`${t.price} (LBP)`} error={err("price")}>
+          {(props) => (
+            <input
+              {...props}
+              className={`${field.input} tabular-nums`}
+              type="text"
+              inputMode="numeric"
+              dir="ltr"
+              placeholder="450,000"
+              value={formatPriceInput(draft.price)}
+              onChange={(e) => setField("price", parseDigits(e.target.value))}
+            />
+          )}
+        </Field>
+
+        <Field label={`${t.descriptionEn} (${t.optional})`}>
+          {(props) => (
+            <textarea
+              {...props}
+              className={field.textarea}
+              rows={2}
+              dir="ltr"
+              lang="en"
+              value={draft.description?.en || ""}
+              onChange={(e) => setField("description.en", e.target.value)}
+            />
+          )}
+        </Field>
+
+        <Field label={`${t.descriptionAr} (${t.optional})`}>
+          {(props) => (
+            <textarea
+              {...props}
+              className={field.textarea}
+              rows={2}
+              dir="rtl"
+              lang="ar"
+              value={draft.description?.ar || ""}
+              onChange={(e) => setField("description.ar", e.target.value)}
+            />
+          )}
+        </Field>
+
+        <Field label={t.position} hint={t.positionHelp}>
+          {(props) => (
+            <input
+              {...props}
+              className={`${field.input} tabular-nums`}
+              type="text"
+              inputMode="numeric"
+              dir="ltr"
+              value={draft.order ?? ""}
+              onChange={(e) => setField("order", parseDigits(e.target.value))}
+            />
+          )}
+        </Field>
+
+        <label className="inline-flex min-h-11 items-center gap-2.5 self-end text-sm font-bold text-charcoal">
+          <input
+            className={field.checkbox}
+            type="checkbox"
+            checked={!!draft.available}
+            onChange={(e) => setField("available", e.target.checked)}
+          />
+          {t.available}
+        </label>
       </div>
     </AdminModal>
   );

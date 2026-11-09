@@ -1,20 +1,16 @@
+import { IoCreateOutline, IoTrashOutline } from "react-icons/io5";
 import AdminModal from "./AdminModal";
-
-const inputClass =
-  "min-h-9 w-full rounded-xl border border-primary/15 bg-white px-2.5 py-1.5 text-[13px] text-charcoal shadow-sm outline-none focus:border-orange focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
-const primaryButton =
-  "inline-flex min-h-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal px-4 py-2 text-sm font-black text-white shadow-soft focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
-const ghostButton =
-  "inline-flex min-h-10 items-center justify-center rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-black text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
-const dangerButton =
-  "inline-flex min-h-10 items-center justify-center rounded-full bg-gradient-to-br from-red-700 to-red-900 px-4 py-2 text-sm font-black text-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-orange";
+import { btn, field } from "./adminUi";
+import { catKey } from "../../utils/categoryUtils";
 
 export default function AdminCategoryManager({
   open,
   categories,
+  counts,
   editingCat,
   catEditEn,
   catEditAr,
+  busy,
   onClose,
   onStartEdit,
   onCancelEdit,
@@ -24,74 +20,75 @@ export default function AdminCategoryManager({
   onDelete,
   t,
 }) {
+  if (editingCat) {
+    return (
+      <AdminModal
+        open={open}
+        title={t.manageCategoriesTitle}
+        onClose={onCancelEdit}
+        onSubmit={onRename}
+        closeLabel={t.close}
+        footer={
+          <>
+            <button className={btn.secondary} type="button" onClick={onCancelEdit}>
+              {t.cancel}
+            </button>
+            <button className={btn.primary} type="submit" disabled={busy || !catEditEn.trim()}>
+              {busy ? t.saving : t.save}
+            </button>
+          </>
+        }
+      >
+        <div className="grid gap-4">
+          <div className={field.wrap}>
+            <label htmlFor="cat-edit-en" className={field.label}>{t.editCategoryEn}</label>
+            <input id="cat-edit-en" className={field.input} dir="ltr" value={catEditEn} onChange={(e) => onChangeEn(e.target.value)} />
+          </div>
+          <div className={field.wrap}>
+            <label htmlFor="cat-edit-ar" className={field.label}>{t.editCategoryAr}</label>
+            <input id="cat-edit-ar" className={field.input} dir="rtl" value={catEditAr} onChange={(e) => onChangeAr(e.target.value)} />
+          </div>
+        </div>
+      </AdminModal>
+    );
+  }
+
   return (
     <AdminModal
       open={open}
       title={`${t.manageCategoriesTitle} (${categories.length})`}
       onClose={onClose}
       closeLabel={t.close}
-      headerRight={
-        !editingCat && (
-          <button className={ghostButton} onClick={onClose}>
-            {t.cancel}
-          </button>
-        )
-      }
     >
-      <div className="grid gap-2.5">
-        {editingCat ? (
-          <div className="grid gap-2.5">
-            <label className="grid gap-1">
-              <span className="text-[11px] font-black text-muted">{t.editCategoryEn}</span>
-              <input className={inputClass} value={catEditEn} onChange={(e) => onChangeEn(e.target.value)} />
-            </label>
-            <label className="grid gap-1">
-              <span className="text-[11px] font-black text-muted">{t.editCategoryAr}</span>
-              <input
-                className={inputClass}
-                value={catEditAr}
-                onChange={(e) => onChangeAr(e.target.value)}
-                dir="rtl"
-              />
-            </label>
-
-            <div className="sticky bottom-[-10px] z-10 -mx-2.5 -mb-2.5 mt-2 flex flex-wrap justify-end gap-2 border-t border-primary/10 bg-gradient-to-b from-white/90 to-white px-2.5 py-2.5 sm:-mx-3 sm:-mb-3 sm:px-3">
-              <button className={ghostButton} onClick={onCancelEdit}>
-                {t.cancel}
+      <ul className="m-0 list-none divide-y divide-primary/10 p-0">
+        {categories.map((category) => (
+          <li key={category.en} className="flex items-center justify-between gap-3 py-3">
+            <div className="min-w-0">
+              <p className="m-0 font-bold text-charcoal">
+                {category.en}
+                <span className="ms-2 text-xs font-normal tabular-nums text-muted">
+                  {counts.get(catKey(category.en)) || 0}
+                </span>
+              </p>
+              {category.ar ? (
+                <p className="m-0 text-sm text-muted" dir="rtl" style={{ textAlign: "start" }}>
+                  {category.ar}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex flex-none gap-1">
+              <button className={btn.quiet} type="button" onClick={() => onStartEdit(category)} disabled={busy}>
+                <IoCreateOutline className="h-4 w-4" aria-hidden="true" />
+                {t.edit}
               </button>
-              <button className={primaryButton} onClick={onRename}>
-                {t.save}
+              <button className={btn.quietDanger} type="button" onClick={() => onDelete(category.en)} disabled={busy}>
+                <IoTrashOutline className="h-4 w-4" aria-hidden="true" />
+                {t.delete}
               </button>
             </div>
-          </div>
-        ) : (
-          <div className="grid gap-2">
-            {categories.map((category) => (
-              <div
-                key={category.en}
-                className="flex flex-col gap-2 rounded-2xl border border-primary/15 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <div className="text-sm font-black text-primary">{category.en}</div>
-                  {category.ar ? (
-                    <div className="mt-0.5 text-right text-xs text-muted [direction:rtl]">
-                      {category.ar}
-                    </div>
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap gap-1.5 sm:justify-end">
-                  <button className={ghostButton} onClick={() => onStartEdit(category)}>
-                    {t.edit}
-                  </button>
-                  <button className={dangerButton} onClick={() => onDelete(category.en)}>
-                    {t.delete}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          </li>
+        ))}
+      </ul>
     </AdminModal>
   );
 }
